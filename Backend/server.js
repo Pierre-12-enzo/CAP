@@ -18,14 +18,14 @@ const app = express();
 const allowedOrigins = [
   //'https://cap-mis.vercel.app',
   'http://localhost:5173',
-    //'https://cap-mis.ilelio.rw'
+  //'https://cap-mis.ilelio.rw'
 ];
 
 const corsOptions = {
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
-    
+
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
@@ -61,19 +61,19 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use((req, res, next) => {
   // Remove server signature
   res.removeHeader('X-Powered-By');
-  
+
   // Security headers
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('X-XSS-Protection', '1; mode=block');
-  
+
   // CORS headers
   const origin = req.headers.origin;
   if (allowedOrigins.includes(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
   }
   res.setHeader('Access-Control-Allow-Credentials', 'true');
-  
+
   next();
 });
 
@@ -81,19 +81,24 @@ app.use((req, res, next) => {
 const uri = process.env.MONGO_URI;
 
 mongoose.connect(uri, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-  serverSelectionTimeoutMS: 5000,
-  socketTimeoutMS: 45000,
+   maxPoolSize: 10,           // Connection pool size
+      minPoolSize: 2,            // Minimum connections in pool
+      maxIdleTimeMS: 60000,      // How long idle connections stay open
+      socketTimeoutMS: 45000,    // Socket timeout
+      connectTimeoutMS: 10000,   // Connection timeout
+      serverSelectionTimeoutMS: 30000, // Server selection timeout
+      heartbeatFrequencyMS: 30000, // How often to check connection
+      retryWrites: true,         // Retry write operations
+      retryReads: true,         
 })
-.then(() => console.log('✅ MongoDB → CAP_mis connected successfully'))
-.catch(e => {
-  console.error('❌ MongoDB connection error:', e.message);
-  console.log('📌 Please check:');
-  console.log('   1. Is MongoDB Atlas cluster running?');
-  console.log('   2. Is IP whitelisted in Atlas?');
-  console.log('   3. Are credentials correct in .env?');
-});
+  .then(() => console.log('✅ MongoDB → CAP_mis connected successfully'))
+  .catch(e => {
+    console.error('❌ MongoDB connection error:', e.message);
+    console.log('📌 Please check:');
+    console.log('   1. Is MongoDB Atlas cluster running?');
+    console.log('   2. Is IP whitelisted in Atlas?');
+    console.log('   3. Are credentials correct in .env?');
+  });
 
 // Connection events
 mongoose.connection.on('connected', () => {
@@ -180,7 +185,7 @@ app.use((req, res, next) => {
 // Global error handler
 app.use((err, req, res, next) => {
   console.error('🔥 Global error:', err);
-  
+
   // Handle CORS errors
   if (err.message === 'Not allowed by CORS') {
     return res.status(403).json({
@@ -189,7 +194,7 @@ app.use((err, req, res, next) => {
       message: 'Your origin is not allowed to access this API'
     });
   }
-  
+
   // Handle other errors
   const statusCode = err.statusCode || 500;
   res.status(statusCode).json({
@@ -213,7 +218,7 @@ app.listen(PORT, () => {
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`✅ CORS Allowed Origins: ${allowedOrigins.join(', ')}`);
   console.log('='.repeat(50));
-  
+
   // Log important environment variables (masked)
   console.log('📝 Configuration:');
   console.log(`   - MongoDB: ${process.env.MONGO_URI ? 'Configured' : 'Missing'}`);
@@ -221,24 +226,24 @@ app.listen(PORT, () => {
   console.log(`   - TextBee: ${process.env.TEXTBEE_API_KEY ? 'Configured' : 'Missing'}`);
 
   // Start cron jobs after server is running
-    CronManager.init();
+  CronManager.init();
 });
 
 // Graceful shutdown
 process.on('SIGTERM', () => {
-    console.log('SIGTERM received. Shutting down gracefully...');
-    CronManager.stopAll();
-    server.close(() => {
-        console.log('Server closed');
-        process.exit(0);
-    });
+  console.log('SIGTERM received. Shutting down gracefully...');
+  CronManager.stopAll();
+  server.close(() => {
+    console.log('Server closed');
+    process.exit(0);
+  });
 });
 
 process.on('SIGINT', () => {
-    console.log('SIGINT received. Shutting down gracefully...');
-    CronManager.stopAll();
-    server.close(() => {
-        console.log('Server closed');
-        process.exit(0);
-    });
+  console.log('SIGINT received. Shutting down gracefully...');
+  CronManager.stopAll();
+  server.close(() => {
+    console.log('Server closed');
+    process.exit(0);
+  });
 });
