@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+        .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+        .trial-box { background: #fff5e6; border: 2px solid #f39c12; border-radius: 10px; padding: 20px; margin: 20px 0; text-align: center; }
+        .days-left { font-size: 36px; font-weight: bold; color: #e67e22; }
+        .features { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 20px 0; }
+        .feature { background: white; padding: 10px; border-radius: 5px; text-align: center; }
+        .button { display: inline-block; background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; margin: 20px 0; }
+        .footer { text-align: center; margin-top: 30px; color: #666; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⏰ Trial Period Ending Soon</h1>
+        </div>
+        
+        <div class="content">
+            <h2>Hello {{firstName}}!</h2>
+            
+            <div class="trial-box">
+                <div class="days-left">{{daysLeft}} Day{{#if (gt daysLeft 1)}}s{{/if}} Left</div>
+                <p>Your trial for <strong>{{schoolName}}</strong> ends on <strong>{{trialEndDate}}</strong></p>
+            </div>
+            
+            <p>Don't lose access to these great features:</p>
+            
+            <div class="features">
+                {{#each features}}
+                <div class="feature">{{this}}</div>
+                {{/each}}
+            </div>
+            
+            <div style="text-align: center;">
+                <a href="{{subscribeUrl}}" class="button">🚀 Choose a Plan</a>
+            </div>
+            
+            <p>Questions? <a href="mailto:{{supportEmail}}">{{supportEmail}}</a></p>
+        </div>
+        
+        <div class="footer">
+            <p>&copy; {{currentYear}} CAP</p>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>You've been added to CAP</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            background-color: #f4f7fc;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .email-wrapper {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Header */
+        .email-header {
+            background: linear-gradient(135deg, #48c6ef 0%, #6f86d6 100%);
+            padding: 40px 30px;
+            text-align: center;
+        }
+        
+        .header-title {
+            color: #ffffff;
+            font-size: 32px;
+            font-weight: 700;
+            margin: 0;
+        }
+        
+        .header-subtitle {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 18px;
+            margin-top: 10px;
+        }
+        
+        /* Content */
+        .email-content {
+            padding: 40px 30px;
+        }
+        
+        .greeting {
+            font-size: 24px;
+            color: #333333;
+            margin-bottom: 20px;
+        }
+        
+        .greeting span {
+            color: #48c6ef;
+            font-weight: 700;
+        }
+        
+        .intro-text {
+            font-size: 16px;
+            color: #666666;
+            margin-bottom: 30px;
+        }
+        
+        /* School Card */
+        .school-badge {
+            background: linear-gradient(135deg, #f6f9fc 0%, #eef2f7 100%);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
+            border: 1px solid #d4e0e9;
+            text-align: center;
+        }
+        
+        .school-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+        
+        .school-name {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        
+        .admin-name {
+            color: #7f8c8d;
+            font-size: 16px;
+        }
+        
+        .admin-name strong {
+            color: #48c6ef;
+        }
+        
+        /* Credentials Card */
+        .credentials-card {
+            background: linear-gradient(135deg, #fff9e6 0%, #fff3d4 100%);
+            border: 2px dashed #f39c12;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .credentials-title {
+            color: #e67e22;
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .credential-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #ffe5b4;
+        }
+        
+        .credential-item:last-child {
+            border-bottom: none;
+        }
+        
+        .credential-label {
+            width: 120px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .credential-value {
+            flex: 1;
+            font-family: 'Courier New', monospace;
+            background-color: #ffffff;
+            padding: 8px 15px;
+            border-radius: 6px;
+            color: #e67e22;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        
+        .security-note {
+            margin-top: 15px;
+            font-size: 13px;
+            color: #e67e22;
+            text-align: center;
+        }
+        
+        /* Permissions Section */
+        .permissions-section {
+            margin: 30px 0;
+        }
+        
+        .permissions-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #333333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .permissions-title:before {
+            content: "🔑";
+            margin-right: 10px;
+            font-size: 20px;
+        }
+        
+        .permissions-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+        
+        .permission-item {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .permission-check {
+            width: 20px;
+            height: 20px;
+            background: linear-gradient(135deg, #48c6ef 0%, #6f86d6 100%);
+            border-radius: 50%;
+            margin-right: 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            font-size: 12px;
+        }
+        
+        .permission-name {
+            color: #2c3e50;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        /* Buttons */
+        .btn-container {
+            text-align: center;
+            margin: 35px 0;
+        }
+        
+        .btn-primary {
+            display: inline-block;
+            background: linear-gradient(135deg, #48c6ef 0%, #6f86d6 100%);
+            color: #ffffff;
+            text-decoration: none;
+            padding: 16px 35px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 18px;
+            box-shadow: 0 4px 15px rgba(72, 198, 239, 0.4);
+        }
+        
+        .btn-secondary {
+            display: inline-block;
+            background-color: #ecf0f1;
+            color: #7f8c8d;
+            text-decoration: none;
+            padding: 12px 25px;
+            border-radius: 50px;
+            font-weight: 500;
+            font-size: 14px;
+            margin-top: 15px;
+        }
+        
+        /* Tips Section */
+        .tips-section {
+            background-color: #f0f7ff;
+            border-radius: 12px;
+            padding: 25px;
+            margin: 30px 0;
+        }
+        
+        .tips-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+        
+        .tips-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .tip-item {
+            padding: 8px 0;
+            color: #34495e;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .tip-item:before {
+            content: "💡";
+            margin-right: 10px;
+            font-size: 16px;
+        }
+        
+        /* Footer */
+        .email-footer {
+            background-color: #f8f9fa;
+            padding: 30px;
+            text-align: center;
+            border-top: 1px solid #eaeaea;
+        }
+        
+        .footer-links a {
+            color: #666666;
+            text-decoration: none;
+            margin: 0 10px;
+            font-size: 14px;
+        }
+        
+        .footer-copyright {
+            color: #999999;
+            font-size: 12px;
+            margin-top: 15px;
+        }
+        
+        @media screen and (max-width: 600px) {
+            .permissions-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .credential-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .credential-label {
+                width: 100%;
+                margin-bottom: 5px;
+            }
+            
+            .credential-value {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-wrapper">
+        <!-- Header -->
+        <div class="email-header">
+            <h1 class="header-title">🏫 Welcome to the Team!</h1>
+            <p class="header-subtitle">You've been added as staff at {{schoolName}}</p>
+        </div>
+
+        <!-- Content -->
+        <div class="email-content">
+            <!-- Greeting -->
+            <h2 class="greeting">Hello <span>{{firstName}}!</span></h2>
+            
+            <p class="intro-text">
+                <strong>{{adminName}}</strong> has added you as staff at <strong>{{schoolName}}</strong>.
+                You now have access to the CAP system with the permissions listed below.
+            </p>
+
+            <!-- School Badge -->
+            <div class="school-badge">
+                <div class="school-icon">🏫</div>
+                <div class="school-name">{{schoolName}}</div>
+                <div class="admin-name">Added by: <strong>{{adminName}}</strong></div>
+            </div>
+
+            <!-- Login Credentials -->
+            <div class="credentials-card">
+                <div class="credentials-title">🔐 Your Login Credentials</div>
+                
+                <div class="credential-item">
+                    <span class="credential-label">Email:</span>
+                    <span class="credential-value">{{email}}</span>
+                </div>
+                
+                <div class="credential-item">
+                    <span class="credential-label">Password:</span>
+                    <span class="credential-value">{{tempPassword}}</span>
+                </div>
+                
+                <div class="security-note">
+                    ⚠️ For security, please change your password after first login
+                </div>
+            </div>
+
+            <!-- Permissions -->
+            <div class="permissions-section">
+                <div class="permissions-title">Your Permissions</div>
+                
+                <div class="permissions-grid">
+                    {{#each permissions}}
+                    <div class="permission-item">
+                        <span class="permission-check">✓</span>
+                        <span class="permission-name">{{this}}</span>
+                    </div>
+                    {{/each}}
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="btn-container">
+                <a href="{{loginUrl}}" class="btn-primary">Login to Dashboard</a>
+                <br>
+                <a href="{{changePasswordUrl}}" class="btn-secondary">Change Temporary Password</a>
+            </div>
+
+            <!-- Tips -->
+            <div class="tips-section">
+                <div class="tips-title">📌 Quick Tips for New Staff:</div>
+                <ul class="tips-list">
+                    <li class="tip-item">Bookmark the login page for easy access</li>
+                    <li class="tip-item">Your permissions are set by {{adminName}} - contact them for changes</li>
+                    <li class="tip-item">All your actions are logged for security</li>
+                    <li class="tip-item">Download the mobile app for easy attendance marking</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="email-footer">
+            <div class="footer-links">
+                <a href="{{privacyPolicyUrl}}">Privacy Policy</a>
+                <a href="{{termsUrl}}">Terms of Service</a>
+                <a href="{{helpUrl}}">Help Center</a>
+            </div>
+            <div class="footer-copyright">
+                &copy; {{currentYear}} CAP - {{schoolName}} 
+            </div>
+        </div>
+    </div>
+</body>
+</html>

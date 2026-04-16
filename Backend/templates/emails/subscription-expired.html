@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+        .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+        .expired-box { background: #ecf0f1; border: 2px solid #95a5a6; border-radius: 10px; padding: 20px; margin: 20px 0; text-align: center; }
+        .button { display: inline-block; background: linear-gradient(135deg, #3498db 0%, #2980b9 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; margin: 20px 0; }
+        .grace-box { background: #fff3cd; border: 1px solid #ffeeba; border-radius: 5px; padding: 15px; margin: 20px 0; }
+        .footer { text-align: center; margin-top: 30px; color: #666; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⏸️ Subscription Expired</h1>
+        </div>
+        
+        <div class="content">
+            <h2>Hello {{firstName}},</h2>
+            
+            <div class="expired-box">
+                <p style="font-size: 18px;">Your CAP subscription for <strong>{{schoolName}}</strong> has expired.</p>
+                <p>Plan: <strong>{{planName}}</strong></p>
+                <p>Expired on: <strong>{{expiredDate}}</strong></p>
+            </div>
+            
+            <div class="grace-box">
+                <strong>🔔 Grace Period: {{gracePeriod}}</strong>
+                <p>Your data will be retained for <strong>{{dataRetention}}</strong>. Reactivate within this period to restore full access.</p>
+            </div>
+            
+            <div style="text-align: center;">
+                <a href="{{reactivateUrl}}" class="button">🔄 Reactivate Subscription</a>
+            </div>
+            
+            <p>Questions? <a href="{{contactUrl}}">Contact Support</a></p>
+        </div>
+        
+        <div class="footer">
+            <p>&copy; {{currentYear}} CAP</p>
+        </div>
+    </div>
+</body>
+</html>

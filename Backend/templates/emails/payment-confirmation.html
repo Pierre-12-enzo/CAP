@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Confirmed - CAP</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            background-color: #f4f7fc;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .email-wrapper {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .email-header {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            padding: 40px 30px;
+            text-align: center;
+        }
+        
+        .header-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+        
+        .header-title {
+            color: #ffffff;
+            font-size: 32px;
+            font-weight: 700;
+        }
+        
+        .email-content {
+            padding: 40px 30px;
+        }
+        
+        .greeting {
+            font-size: 24px;
+            color: #333333;
+            margin-bottom: 20px;
+        }
+        
+        .success-message {
+            background-color: #d4edda;
+            border: 2px solid #c3e6cb;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 30px 0;
+            color: #155724;
+            text-align: center;
+        }
+        
+        .invoice-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 12px;
+            padding: 25px;
+            margin: 30px 0;
+            border: 1px solid #dee2e6;
+        }
+        
+        .invoice-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px dashed #adb5bd;
+        }
+        
+        .invoice-number {
+            font-size: 20px;
+            font-weight: 700;
+            color: #11998e;
+        }
+        
+        .invoice-status {
+            background-color: #11998e;
+            color: #ffffff;
+            padding: 5px 15px;
+            border-radius: 30px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .invoice-details {
+            margin: 20px 0;
+        }
+        
+        .invoice-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .invoice-row:last-child {
+            border-bottom: none;
+        }
+        
+        .invoice-label {
+            color: #6c757d;
+            font-weight: 500;
+        }
+        
+        .invoice-value {
+            font-weight: 700;
+            color: #333333;
+        }
+        
+        .total-row {
+            font-size: 18px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 2px solid #11998e;
+        }
+        
+        .plan-details {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 30px 0;
+        }
+        
+        .plan-name {
+            font-size: 24px;
+            font-weight: 700;
+        }
+        
+        .plan-price {
+            font-size: 20px;
+            background: rgba(255,255,255,0.2);
+            padding: 8px 15px;
+            border-radius: 30px;
+        }
+        
+        .btn-container {
+            text-align: center;
+            margin: 35px 0;
+        }
+        
+        .btn-primary {
+            display: inline-block;
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: #ffffff;
+            text-decoration: none;
+            padding: 16px 35px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 18px;
+            box-shadow: 0 4px 15px rgba(17, 153, 142, 0.4);
+            margin: 0 10px;
+        }
+        
+        .btn-secondary {
+            display: inline-block;
+            background-color: #6c757d;
+            color: #ffffff;
+            text-decoration: none;
+            padding: 16px 35px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 18px;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin: 30px 0;
+        }
+        
+        .feature-item {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .feature-icon {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+        
+        .feature-name {
+            color: #333333;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        .email-footer {
+            background-color: #f8f9fa;
+            padding: 30px;
+            text-align: center;
+            border-top: 1px solid #eaeaea;
+        }
+        
+        @media screen and (max-width: 600px) {
+            .invoice-header {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .btn-primary, .btn-secondary {
+                display: block;
+                margin: 10px 0;
+            }
+            
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-wrapper">
+        <!-- Header -->
+        <div class="email-header">
+            <div class="header-icon">💰</div>
+            <h1 class="header-title">Payment Confirmed!</h1>
+        </div>
+
+        <!-- Content -->
+        <div class="email-content">
+            <h2 class="greeting">Thank you, {{firstName}}! 🎉</h2>
+            
+            <div class="success-message">
+                <strong>✓ Payment Successful</strong><br>
+                Your transaction has been completed and your subscription is now active.
+            </div>
+
+            <!-- Plan Details -->
+            <div class="plan-details">
+                <span class="plan-name">{{planName}} Plan</span>
+                <span class="plan-price">{{amount}} {{currency}}/{{billingCycle}}</span>
+            </div>
+
+            <!-- Invoice Card -->
+            <div class="invoice-card">
+                <div class="invoice-header">
+                    <span class="invoice-number">#{{invoiceNumber}}</span>
+                    <span class="invoice-status">{{invoiceStatus}}</span>
+                </div>
+                
+                <div class="invoice-details">
+                    <div class="invoice-row">
+                        <span class="invoice-label">Payment Date:</span>
+                        <span class="invoice-value">{{paymentDate}}</span>
+                    </div>
+                    <div class="invoice-row">
+                        <span class="invoice-label">Payment Method:</span>
+                        <span class="invoice-value">{{paymentMethod}}</span>
+                    </div>
+                    <div class="invoice-row">
+                        <span class="invoice-label">Transaction ID:</span>
+                        <span class="invoice-value">{{transactionId}}</span>
+                    </div>
+                    <div class="invoice-row">
+                        <span class="invoice-label">Period Start:</span>
+                        <span class="invoice-value">{{periodStart}}</span>
+                    </div>
+                    <div class="invoice-row">
+                        <span class="invoice-label">Period End:</span>
+                        <span class="invoice-value">{{periodEnd}}</span>
+                    </div>
+                    <div class="invoice-row total-row">
+                        <span class="invoice-label">Total Paid:</span>
+                        <span class="invoice-value">{{amount}} {{currency}}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Features -->
+            <h3 style="margin: 30px 0 15px;">✨ Your Plan Includes:</h3>
+            <div class="features-grid">
+                {{#each features}}
+                <div class="feature-item">
+                    <div class="feature-icon">{{icon}}</div>
+                    <div class="feature-name">{{name}}</div>
+                </div>
+                {{/each}}
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="btn-container">
+                <a href="{{invoiceUrl}}" class="btn-primary">📄 Download Invoice</a>
+                <a href="{{dashboardUrl}}" class="btn-secondary">🚀 Go to Dashboard</a>
+            </div>
+
+            <!-- Next Billing -->
+            <div style="text-align: center; margin: 30px 0; padding: 20px; background-color: #e8f4f8; border-radius: 8px;">
+                <p style="color: #2c3e50;">
+                    <strong>Next Billing Date:</strong> {{nextBillingDate}}<br>
+                    <small>We'll send you a reminder before your subscription renews.</small>
+                </p>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="email-footer">
+            <div style="margin-bottom: 15px;">
+                <a href="{{billingUrl}}" style="color: #11998e; margin: 0 10px;">Billing History</a>
+                <a href="{{subscriptionUrl}}" style="color: #11998e; margin: 0 10px;">Manage Subscription</a>
+                <a href="{{supportUrl}}" style="color: #11998e; margin: 0 10px;">Support</a>
+            </div>
+            <div style="color: #999999; font-size: 12px;">
+                &copy; {{currentYear}} CAP. All rights reserved.
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+

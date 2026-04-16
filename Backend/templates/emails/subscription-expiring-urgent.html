@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #ff6b6b 0%, #ff4757 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+        .urgent-badge { background: #ff4757; color: white; padding: 5px 15px; border-radius: 20px; display: inline-block; margin-bottom: 15px; }
+        .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+        .expiry-box { background: #fff5f5; border: 2px solid #ff6b6b; border-radius: 10px; padding: 20px; margin: 20px 0; text-align: center; }
+        .days { font-size: 48px; font-weight: bold; color: #ff4757; }
+        .button { display: inline-block; background: linear-gradient(135deg, #ff6b6b 0%, #ff4757 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; margin: 20px 0; }
+        .warning { background: #ffeaa7; border-left: 4px solid #fdcb6e; padding: 15px; margin: 20px 0; }
+        .footer { text-align: center; margin-top: 30px; color: #666; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="urgent-badge">⚠️ URGENT ⚠️</div>
+            <h1>Your Subscription Expires Tomorrow!</h1>
+        </div>
+        
+        <div class="content">
+            <h2>Hello {{firstName}}!</h2>
+            
+            <div class="expiry-box">
+                <div class="days">⏰ TOMORROW</div>
+                <p style="font-size: 18px;">Your CAP subscription for <strong>{{schoolName}}</strong> expires tomorrow!</p>
+            </div>
+            
+            <p>To avoid service interruption and loss of access to your data, please renew immediately.</p>
+            
+            <div style="text-align: center;">
+                <a href="{{renewalUrl}}" class="button">🔒 RENEW NOW</a>
+            </div>
+            
+            <div class="warning">
+                <strong>⚠️ If you don't renew:</strong>
+                <ul>
+                    <li>Your school will lose access to CAP</li>
+                    <li>Students cannot be managed</li>
+                    <li>Cards cannot be generated</li>
+                    <li>Attendance cannot be marked</li>
+                    <li>All staff accounts will be locked</li>
+                </ul>
+            </div>
+            
+            <p>Need help? Contact us at <a href="mailto:{{supportEmail}}">{{supportEmail}}</a></p>
+        </div>
+        
+        <div class="footer">
+            <p>&copy; {{currentYear}} CAP - {{schoolName}}</p>
+        </div>
+    </div>
+</body>
+</html>

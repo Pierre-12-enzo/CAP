@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Welcome to CAP</title>
+    <style>
+        /* Reset styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            background-color: #f4f7fc;
+            margin: 0;
+            padding: 0;
+        }
+        
+        /* Main container */
+        .email-wrapper {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+        
+        /* Header with gradient */
+        .email-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px 30px;
+            text-align: center;
+        }
+        
+        .logo {
+            margin-bottom: 20px;
+        }
+        
+        .logo img {
+            max-width: 150px;
+            height: auto;
+        }
+        
+        .header-title {
+            color: #ffffff;
+            font-size: 32px;
+            font-weight: 700;
+            margin: 0;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header-subtitle {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 18px;
+            margin-top: 10px;
+            font-weight: 400;
+        }
+        
+        /* Content area */
+        .email-content {
+            padding: 40px 30px;
+            background-color: #ffffff;
+        }
+        
+        .greeting {
+            font-size: 24px;
+            color: #333333;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+        
+        .greeting span {
+            color: #667eea;
+        }
+        
+        .intro-text {
+            font-size: 16px;
+            color: #666666;
+            margin-bottom: 30px;
+            line-height: 1.8;
+        }
+        
+        /* School info card */
+        .school-card {
+            background: linear-gradient(135deg, #f8faff 0%, #f0f4ff 100%);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
+            border: 1px solid #e0e7ff;
+        }
+        
+        .school-name {
+            font-size: 20px;
+            font-weight: 700;
+            color: #333333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .school-name:before {
+            content: "🏫";
+            margin-right: 10px;
+            font-size: 24px;
+        }
+        
+        .plan-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #ffffff;
+            padding: 6px 15px;
+            border-radius: 30px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-top: 5px;
+        }
+        
+        .plan-details {
+            margin-top: 15px;
+            border-top: 1px solid #e0e7ff;
+            padding-top: 15px;
+        }
+        
+        .plan-details p {
+            color: #666666;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        
+        /* Trial info */
+        .trial-info {
+            background-color: #fff3cd;
+            border: 1px solid #ffeeba;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 30px;
+            color: #856404;
+        }
+        
+        .trial-info strong {
+            font-weight: 700;
+        }
+        
+        /* Button */
+        .btn-container {
+            text-align: center;
+            margin: 35px 0;
+        }
+        
+        .btn-primary {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #ffffff;
+            text-decoration: none;
+            padding: 16px 35px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 18px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+        }
+        
+        /* Quick setup guide */
+        .setup-guide {
+            margin: 40px 0;
+            background-color: #f9f9f9;
+            border-radius: 12px;
+            padding: 25px;
+        }
+        
+        .setup-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #333333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .setup-title:before {
+            content: "🚀";
+            margin-right: 10px;
+            font-size: 24px;
+        }
+        
+        .steps {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .step-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #eaeaea;
+        }
+        
+        .step-item:last-child {
+            border-bottom: none;
+        }
+        
+        .step-number {
+            width: 30px;
+            height: 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #ffffff;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            margin-right: 15px;
+            font-size: 14px;
+        }
+        
+        .step-text {
+            color: #666666;
+            font-size: 16px;
+        }
+        
+        .step-text strong {
+            color: #333333;
+        }
+        
+        /* Verification notice */
+        .verification-notice {
+            background-color: #e8f5e9;
+            border-left: 4px solid #4caf50;
+            padding: 15px;
+            margin: 30px 0;
+            border-radius: 8px;
+        }
+        
+        .verification-notice p {
+            color: #2e7d32;
+            margin: 0;
+            font-size: 14px;
+        }
+        
+        .verification-notice a {
+            color: #2e7d32;
+            font-weight: 700;
+            text-decoration: underline;
+        }
+        
+        /* Support section */
+        .support-section {
+            margin-top: 40px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .support-section h4 {
+            color: #333333;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        
+        .support-links {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .support-link {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+        }
+        
+        .support-link:hover {
+            text-decoration: underline;
+        }
+        
+        .support-link:before {
+            margin-right: 5px;
+            font-size: 16px;
+        }
+        
+        .guide-link:before {
+            content: "📚";
+        }
+        
+        .support-email:before {
+            content: "📧";
+        }
+        
+        .website-link:before {
+            content: "🌐";
+        }
+        
+        /* Footer */
+        .email-footer {
+            background-color: #f8f9fa;
+            padding: 30px;
+            text-align: center;
+            border-top: 1px solid #eaeaea;
+        }
+        
+        .footer-links {
+            margin-bottom: 20px;
+        }
+        
+        .footer-links a {
+            color: #666666;
+            text-decoration: none;
+            margin: 0 10px;
+            font-size: 14px;
+        }
+        
+        .footer-links a:hover {
+            color: #667eea;
+            text-decoration: underline;
+        }
+        
+        .footer-copyright {
+            color: #999999;
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+        
+        .footer-address {
+            color: #999999;
+            font-size: 12px;
+        }
+        
+        /* Responsive */
+        @media screen and (max-width: 600px) {
+            .email-wrapper {
+                margin: 10px;
+                border-radius: 12px;
+            }
+            
+            .email-header {
+                padding: 30px 20px;
+            }
+            
+            .email-content {
+                padding: 30px 20px;
+            }
+            
+            .header-title {
+                font-size: 28px;
+            }
+            
+            .btn-primary {
+                display: block;
+                padding: 14px 20px;
+            }
+            
+            .support-links {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-wrapper">
+        <!-- Header -->
+        <div class="email-header">
+            <div class="logo">
+                <!-- You can replace with your actual logo URL -->
+                <img src="https://res.cloudinary.com/demo/image/upload/v1/cap/logo" alt="CAP Logo" width="150">
+            </div>
+            <h1 class="header-title">Welcome to CAP! 🎓</h1>
+            <p class="header-subtitle">Your Complete School Management Solution</p>
+        </div>
+
+        <!-- Content -->
+        <div class="email-content">
+            <!-- Greeting with dynamic name -->
+            <h2 class="greeting">Hello <span>{{firstName}}</span>!</h2>
+            
+            <p class="intro-text">
+                We're thrilled to have you on board! CAP is designed to make school management easier, 
+                from ID cards to attendance tracking and staff permissions.
+            </p>
+
+            <!-- School Information Card (dynamic) -->
+            <div class="school-card">
+                <div class="school-name">{{schoolName}}</div>
+                
+                <!-- Plan Badge (dynamic) -->
+                <span class="plan-badge">{{planName}} Plan</span>
+                
+                <div class="plan-details">
+                    <p>📊 <strong>Student Limit:</strong> {{studentLimit}} students</p>
+                    <p>👥 <strong>Staff Limit:</strong> {{staffLimit}} staff members</p>
+                    <p>💾 <strong>Storage:</strong> {{storage}} MB</p>
+                </div>
+            </div>
+
+            <!-- Trial Information (conditional - only shown if trial) -->
+            {{#if isTrial}}
+            <div class="trial-info">
+                <strong>✨ Free Trial:</strong> Your {{trialDays}}-day trial ends on 
+                <strong>{{trialEndDate}}</strong>. Add your payment method to continue uninterrupted.
+            </div>
+            {{/if}}
+
+            <!-- Main CTA Button -->
+            <div class="btn-container">
+                <a href="{{dashboardUrl}}" class="btn-primary">Go to Dashboard</a>
+            </div>
+
+            <!-- Quick Setup Guide -->
+            <div class="setup-guide">
+                <h3 class="setup-title">Quick Setup Guide</h3>
+                <ul class="steps">
+                    <li class="step-item">
+                        <span class="step-number">1</span>
+                        <span class="step-text"><strong>Complete your profile</strong> - Add school details and logo</span>
+                    </li>
+                    <li class="step-item">
+                        <span class="step-number">2</span>
+                        <span class="step-text"><strong>Add students</strong> - Import via CSV or add manually</span>
+                    </li>
+                    <li class="step-item">
+                        <span class="step-number">3</span>
+                        <span class="step-text"><strong>Create card templates</strong> - Design beautiful ID cards</span>
+                    </li>
+                    <li class="step-item">
+                        <span class="step-number">4</span>
+                        <span class="step-text"><strong>Generate ID cards</strong> - Print or download cards</span>
+                    </li>
+                    <li class="step-item">
+                        <span class="step-number">5</span>
+                        <span class="step-text"><strong>Invite staff</strong> - Set their permissions</span>
+                    </li>
+                </ul>
+                
+                <div style="text-align: center; margin-top: 20px;">
+                    <a href="{{setupGuideUrl}}" style="color: #667eea; text-decoration: none; font-weight: 600;">
+                        📖 Read detailed guide →
+                    </a>
+                </div>
+            </div>
+
+            <!-- Email Verification Notice (conditional) -->
+            {{#unless isEmailVerified}}
+            <div class="verification-notice">
+                <p>
+                    <strong>🔔 Don't forget to verify your email!</strong><br>
+                    We sent a verification link to <strong>{{email}}</strong>. 
+                    <a href="{{verificationUrl}}">Click here</a> if you need a new link.
+                </p>
+            </div>
+            {{/unless}}
+
+            <!-- Support Section -->
+            <div class="support-section">
+                <h4>Need Help Getting Started?</h4>
+                <div class="support-links">
+                    <a href="{{guideUrl}}" class="support-link guide-link">Setup Guide</a>
+                    <a href="mailto:{{supportEmail}}" class="support-link support-email">{{supportEmail}}</a>
+                    <a href="{{websiteUrl}}" class="support-link website-link">Visit Website</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="email-footer">
+            <div class="footer-links">
+                <a href="{{privacyPolicyUrl}}">Privacy Policy</a>
+                <a href="{{termsUrl}}">Terms of Service</a>
+                <a href="{{unsubscribeUrl}}">Unsubscribe</a>
+            </div>
+            <div class="footer-copyright">
+                &copy; {{currentYear}} CAP. All rights reserved.
+            </div>
+            <div class="footer-address">
+                {{companyAddress}}
+            </div>
+        </div>
+    </div>
+</body>
+</html>
