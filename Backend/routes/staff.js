@@ -40,7 +40,7 @@ router.get('/',
                 .select('-password')
                 .sort({ createdAt: -1 });
 
-                
+
 
             // Add computed fields
             const enhancedStaff = staff.map(member => ({
@@ -518,7 +518,7 @@ router.delete('/:id',
             const staff = await User.findOne({
                 _id: req.params.id,
                 role: 'staff'
-            });
+            }).populate('schoolId', 'name');
 
             if (!staff) {
                 return res.status(404).json({
@@ -529,7 +529,7 @@ router.delete('/:id',
 
             // Check permission
             if (req.user.role === 'admin' &&
-                staff.schoolId.toString() !== req.schoolId.toString()) {
+                staff.schoolId._id.toString() !== req.schoolId.toString()) {
                 return res.status(403).json({
                     success: false,
                     error: 'Access denied'
@@ -537,13 +537,41 @@ router.delete('/:id',
             }
 
             if (permanent === 'true') {
+                // Store staff data for email before deletion
+                const staffData = {
+                    firstName: staff.firstName,
+                    email: staff.email,
+                    schoolName: staff.schoolId.name
+                };
+
                 // Permanent delete (use with caution!)
                 await User.findByIdAndDelete(staff._id);
 
+                // Send permanent deletion email
+                await sendEmail({
+                    to: staff.email,
+                    subject: `🗑️ Account Permanently Deleted - ${staff.schoolId.name}`,
+                    template: 'account-deleted-permanent',
+                    context: {
+                        firstName: staff.firstName,
+                        email: staff.email,
+                        schoolName: staff.schoolId.name,
+                        adminName: `${req.user.firstName} ${req.user.lastName}`,
+                        deletionDate: new Date().toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        }),
+                        year: new Date().getFullYear()
+                    }
+                });
+
                 await AuditLog.create({
-                    action: 'DELETE_STAFF',
+                    action: 'DELETE_STAFF_PERMANENT',
                     userId: req.user._id,
-                    schoolId: staff.schoolId,
+                    schoolId: staff.schoolId._id,
                     details: {
                         staffId: staff._id,
                         staffEmail: staff.email,
@@ -562,27 +590,29 @@ router.delete('/:id',
                 staff.isActive = false;
                 await staff.save();
 
-                // Send goodbye email
+                // Send deactivation email
                 await sendEmail({
                     to: staff.email,
-                    subject: `👋 Account Deactivated - ${(await School.findById(staff.schoolId)).name}`,
+                    subject: `👋 Account Deactivated - ${staff.schoolId.name}`,
                     template: 'account-deactivated',
                     context: {
                         firstName: staff.firstName,
-                        schoolName: (await School.findById(staff.schoolId)).name,
+                        schoolName: staff.schoolId.name,
                         adminName: `${req.user.firstName} ${req.user.lastName}`,
-                        supportEmail: process.env.SUPPORT_EMAIL,
-                        reactivateUrl: `${process.env.FRONTEND_URL}/contact-support`
+                        supportEmail: process.env.SUPPORT_EMAIL || 'support@capmis.com',
+                        reactivateUrl: `${process.env.FRONTEND_URL}/contact-support`,
+                        year: new Date().getFullYear()
                     }
                 });
 
                 await AuditLog.create({
                     action: 'DEACTIVATE_STAFF',
                     userId: req.user._id,
-                    schoolId: staff.schoolId,
+                    schoolId: staff.schoolId._id,
                     details: {
                         staffId: staff._id,
-                        staffEmail: staff.email
+                        staffEmail: staff.email,
+                        staffName: `${staff.firstName} ${staff.lastName}`
                     },
                     ipAddress: req.ip,
                     userAgent: req.get('User-Agent')

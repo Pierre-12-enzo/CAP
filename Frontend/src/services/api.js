@@ -411,9 +411,6 @@ export const cardAPI = {
       },
       responseType: 'blob',
       timeout: 600000, // 10 minutes timeout
-      onDownloadProgress: (progressEvent) => {
-        // You can use this for download progress if needed
-      }
     });
 
     // Try to get batch ID from headers
@@ -422,7 +419,6 @@ export const cardAPI = {
       // You might want to store this somewhere accessible
       console.log('Batch ID received:', batchId);
     }
-
     return response.data;
   },
 

@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Deactivated - CAP_mis</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f7f6;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+            padding: 30px;
+            text-align: center;
+            border-radius: 12px 12px 0 0;
+            color: white;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .header p {
+            margin: 10px 0 0;
+            opacity: 0.9;
+        }
+        .content {
+            padding: 30px;
+        }
+        .greeting {
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+        .warning-box {
+            background: #fef2f2;
+            border-left: 4px solid #dc2626;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .info-box {
+            background: #f3f4f6;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .button {
+            display: inline-block;
+            background: linear-gradient(135deg, #059669 0%, #065f46 100%);
+            color: white;
+            text-decoration: none;
+            padding: 14px 28px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-weight: bold;
+            text-align: center;
+        }
+        .button-secondary {
+            background: #6b7280;
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            border-top: 1px solid #e5e7eb;
+            color: #6b7280;
+            font-size: 12px;
+        }
+        .school-badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        @media only screen and (max-width: 600px) {
+            .container {
+                width: 100%;
+                padding: 10px;
+            }
+            .button {
+                display: block;
+                margin: 10px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚠️ Account Deactivated</h1>
+            <p>CAP_mis - Academic Portal Management Information System</p>
+            <div class="school-badge">{{schoolName}}</div>
+        </div>
+
+        <div class="content">
+            <div class="greeting">
+                <strong>Hello {{firstName}},</strong>
+            </div>
+
+            <p>We regret to inform you that your staff account at <strong>{{schoolName}}</strong> has been <strong style="color: #dc2626;">deactivated</strong> by <strong>{{adminName}}</strong>.</p>
+
+            <div class="warning-box">
+                <strong>🔒 What this means for you:</strong>
+                <ul style="margin-top: 10px; padding-left: 20px;">
+                    <li>You can no longer log in to the CAP_mis system</li>
+                    <li>Your access to all school management features is revoked</li>
+                    <li>Your data remains in the system but is inaccessible</li>
+                    <li>You will not receive any further notifications</li>
+                </ul>
+            </div>
+
+            <div class="info-box">
+                <strong>📋 Account Summary:</strong><br/>
+                <strong>Name:</strong> {{firstName}}<br/>
+                <strong>School:</strong> {{schoolName}}<br/>
+                <strong>Status:</strong> <span style="color: #dc2626;">Deactivated</span>
+            </div>
+
+            <p><strong>Need assistance?</strong> If you believe this is a mistake or have questions about your deactivation, please contact your school administrator or reach out to our support team.</p>
+
+            <div style="text-align: center;">
+                <a href="{{supportEmail}}" class="button">📧 Contact Support</a>
+                <a href="{{reactivateUrl}}" class="button button-secondary">🔄 Request Reactivation</a>
+            </div>
+
+            <div style="background: #fef3c7; padding: 15px; border-radius: 8px; margin-top: 20px;">
+                <strong>💡 Note:</strong> Your account can be reactivated by your school administrator. If you have any questions about the deactivation, please reach out to your school's administration team.
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>© {{year}} CAP_mis - Comprehensive Academic Portal Management Information System</p>
+            <p>This is an automated notification, please do not reply to this email.</p>
+            <p style="font-size: 11px; color: #9ca3af;">
+                If you have questions about your account status, please contact your school administrator.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

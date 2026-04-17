@@ -1,10 +1,9 @@
-// pages/dashboard/StaffManagement.jsx - COMPLETE VERSION
+// pages/dashboard/StaffManagement.jsx - UPDATED VERSION
 import React, { useState, useEffect } from 'react';
 import { staffAPI } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import * as XLSX from 'xlsx';
-import { saveAs } from 'file-saver';
 
 const StaffManagement = () => {
   const { user } = useAuth();
@@ -13,7 +12,9 @@ const StaffManagement = () => {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [showBulkModal, setShowBulkModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedStaff, setSelectedStaff] = useState(null);
+  const [deleteType, setDeleteType] = useState(null); // 'deactivate' or 'permanent'
   const [notification, setNotification] = useState({ show: false, type: '', message: '' });
   const [modalError, setModalError] = useState('');
 
@@ -22,6 +23,7 @@ const StaffManagement = () => {
     lastName: '',
     email: '',
     phoneNumber: '',
+    isActive: true,
     permissions: {
       canViewAnalytics: false,
       canGenerateCards: false,
@@ -52,8 +54,6 @@ const StaffManagement = () => {
 
   useEffect(() => {
     fetchStaff();
-
-    // Handle resize for mobile detection
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
@@ -76,13 +76,11 @@ const StaffManagement = () => {
     } finally {
       setLoading(false);
     }
-  
   };
 
   const filterAndSortStaff = () => {
     let filtered = [...staff];
 
-    // Apply search filter
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       filtered = filtered.filter(member =>
@@ -93,21 +91,18 @@ const StaffManagement = () => {
       );
     }
 
-    // Apply status filter
     if (statusFilter !== 'all') {
       filtered = filtered.filter(member =>
         statusFilter === 'active' ? member.isActive : !member.isActive
       );
     }
 
-    // Apply permission filter
     if (permissionFilter !== 'all') {
       filtered = filtered.filter(member =>
         member.permissions?.[permissionFilter]
       );
     }
 
-    // Apply sorting
     filtered.sort((a, b) => {
       let aVal = a[sortBy];
       let bVal = b[sortBy];
@@ -140,12 +135,10 @@ const StaffManagement = () => {
         }
       });
     } else {
-      setFormData({ ...formData, [name]: value });
+      setFormData({ ...formData, [name]: type === 'checkbox' ? checked : value });
     }
   };
 
-
-  // Add these helper functions
   const showSuccess = (message) => {
     setNotification({ show: true, type: 'success', message });
     setTimeout(() => setNotification({ show: false, type: '', message: '' }), 5000);
@@ -156,7 +149,6 @@ const StaffManagement = () => {
     setTimeout(() => setNotification({ show: false, type: '', message: '' }), 5000);
   };
 
-  // Update handleSubmit for create/edit
   const handleSubmit = async (e) => {
     e.preventDefault();
     setModalError('');
@@ -198,26 +190,53 @@ const StaffManagement = () => {
     }
   };
 
-
-  // Update handleDelete
-  const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to deactivate this staff member?')) {
-      try {
-        const response = await staffAPI.deleteStaff(id);
-        if (response.success) {
-          showSuccess('✅ Staff member deactivated successfully');
-          fetchStaff();
-        } else {
-          showError(response.error || 'Failed to deactivate staff member');
-        }
-      } catch (error) {
-        console.error('Error deleting staff:', error);
-        showError(error.error || 'Failed to deactivate staff member');
+  // Updated delete handler with options
+  const handleDeactivate = async (id) => {
+    try {
+      const response = await staffAPI.deleteStaff(id); // Soft delete / deactivate
+      if (response.success) {
+        showSuccess('✅ Staff member deactivated successfully');
+        fetchStaff();
+      } else {
+        showError(response.error || 'Failed to deactivate staff member');
       }
+    } catch (error) {
+      console.error('Error deactivating staff:', error);
+      showError(error.error || 'Failed to deactivate staff member');
     }
+    setShowDeleteModal(false);
+    setSelectedStaff(null);
   };
 
-  // Update handleResendInvite function
+  const handlePermanentDelete = async (id) => {
+    // Optional: Add confirmation with text input for extra safety
+    const confirmText = window.prompt(
+      '⚠️ PERMANENT DELETE WARNING!\n\n' +
+      'This action cannot be undone. All staff data will be permanently removed.\n\n' +
+      'Type "PERMANENT DELETE" to confirm:'
+    );
+
+    if (confirmText !== 'PERMANENT DELETE') {
+      showError('Permanent delete cancelled - incorrect confirmation text');
+      return;
+    }
+
+    try {
+      const response = await staffAPI.deleteStaff(id, true); // permanent = true
+      if (response.success) {
+        showSuccess('✅ Staff member permanently deleted');
+        fetchStaff();
+      } else {
+        showError(response.error || 'Failed to permanently delete staff member');
+      }
+    } catch (error) {
+      console.error('Error deleting staff:', error);
+      showError(error.error || 'Failed to permanently delete staff member');
+    }
+    setShowDeleteModal(false);
+    setSelectedStaff(null);
+  };
+
   const handleResendInvite = async (id) => {
     try {
       const response = await staffAPI.resendInvite(id);
@@ -232,13 +251,13 @@ const StaffManagement = () => {
     }
   };
 
-
   const resetForm = () => {
     setFormData({
       firstName: '',
       lastName: '',
       email: '',
       phoneNumber: '',
+      isActive: true,
       permissions: {
         canViewAnalytics: false,
         canGenerateCards: false,
@@ -260,6 +279,7 @@ const StaffManagement = () => {
       lastName: member.lastName || '',
       email: member.email || '',
       phoneNumber: member.phoneNumber || '',
+      isActive: member.isActive || false,
       permissions: member.permissions || {
         canViewAnalytics: false,
         canGenerateCards: false,
@@ -274,7 +294,16 @@ const StaffManagement = () => {
     setShowModal(true);
   };
 
-  // ===== BULK IMPORT FUNCTIONS =====
+  // Helper function to check if resend invite should be disabled
+  const shouldDisableResend = (member) => {
+    // Disable if user has logged in before (has lastLogin)
+    if (member.lastLogin) return true;
+    // Disable if user is active (already using the account)
+    if (member.isActive) return true;
+    return false;
+  };
+
+  // Bulk import functions
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -322,7 +351,6 @@ const StaffManagement = () => {
     XLSX.writeFile(wb, 'staff_import_template.xlsx');
   };
 
-  // Update handleBulkImport
   const handleBulkImport = async () => {
     if (bulkData.length === 0) {
       setModalError('Please upload a file first');
@@ -373,10 +401,6 @@ const StaffManagement = () => {
     return `${firstName?.charAt(0) || ''}${lastName?.charAt(0) || ''}`.toUpperCase();
   };
 
-  const getPermissionCount = (permissions) => {
-    return Object.values(permissions || {}).filter(Boolean).length;
-  };
-
   const getPermissionNames = (permissions) => {
     const names = [];
     if (permissions?.canViewAnalytics) names.push('Analytics');
@@ -390,16 +414,12 @@ const StaffManagement = () => {
     return names;
   };
 
-  // Pagination
   const totalPages = Math.ceil(filteredStaff.length / itemsPerPage);
   const paginatedStaff = filteredStaff.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
 
-
-
-  // Permission options for filter
   const permissionOptions = [
     { value: 'canViewAnalytics', label: 'Analytics' },
     { value: 'canGenerateCards', label: 'Cards' },
@@ -450,10 +470,8 @@ const StaffManagement = () => {
           </button>
         </div>
       </div>
-      {/* Notification/Success Messages */}
 
-      {/* ===== GLOBAL SUCCESS TOAST ===== */}
-      {/* ===== GLOBAL NOTIFICATION TOAST ===== */}
+      {/* Notification Toast */}
       <AnimatePresence>
         {notification.show && (
           <motion.div
@@ -495,30 +513,14 @@ const StaffManagement = () => {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-        <StatCard
-          title="Total Staff"
-          value={staff.length}
-          icon="pi-users"
-          color="emerald"
-        />
-        <StatCard
-          title="Active Staff"
-          value={staff.filter(s => s.isActive).length}
-          icon="pi-check-circle"
-          color="blue"
-        />
-        <StatCard
-          title="Pending Invites"
-          value={staff.filter(s => !s.isEmailVerified).length}
-          icon="pi-envelope"
-          color="amber"
-        />
+        <StatCard title="Total Staff" value={staff.length} icon="pi-users" color="emerald" />
+        <StatCard title="Active Staff" value={staff.filter(s => s.isActive).length} icon="pi-check-circle" color="blue" />
+        <StatCard title="Pending Invites" value={staff.filter(s => !s.isActive && !s.lastLogin).length} icon="pi-envelope" color="amber" />
       </div>
 
       {/* Search and Filters */}
       <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-xl border border-emerald-200/30 p-4 md:p-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-          {/* Search */}
           <div className="lg:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-2">Search</label>
             <div className="relative">
@@ -533,7 +535,6 @@ const StaffManagement = () => {
             </div>
           </div>
 
-          {/* Status Filter */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
             <select
@@ -547,7 +548,6 @@ const StaffManagement = () => {
             </select>
           </div>
 
-          {/* Permission Filter */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Permission</label>
             <select
@@ -562,7 +562,6 @@ const StaffManagement = () => {
             </select>
           </div>
 
-          {/* Items Per Page */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Show</label>
             <select
@@ -578,7 +577,6 @@ const StaffManagement = () => {
           </div>
         </div>
 
-        {/* Sort Controls */}
         <div className="flex items-center justify-end mt-4 space-x-4">
           <span className="text-sm text-gray-600">Sort by:</span>
           <select
@@ -595,7 +593,6 @@ const StaffManagement = () => {
           <button
             onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
             className="p-2 hover:bg-gray-100 rounded-lg"
-            title={sortOrder === 'asc' ? 'Ascending' : 'Descending'}
           >
             <i className={`pi pi-sort-${sortOrder === 'asc' ? 'amount-down' : 'amount-up'}`}></i>
           </button>
@@ -619,98 +616,82 @@ const StaffManagement = () => {
               </thead>
               <tbody className="divide-y divide-gray-100">
                 <AnimatePresence>
-                  {paginatedStaff.map((member) => {
-                    console.log('Member:', {
-                      id: member._id,
-                      name: `${member.firstName} ${member.lastName}`,
-                      lastLogin: member.lastLogin,
-                      lastLoginAt: member.lastLogin?.at,
-                      lastActiveAt: member.lastActiveAt,
-                      typeOfLastLogin: typeof member.lastLogin,
-                      typeOfAt: typeof member.lastLogin?.at
-                    });
-                    return (
-                      <motion.tr
-                        key={member._id}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="hover:bg-emerald-50/30 transition-colors"
-                      >
-
-                        <td className="py-4 px-6">
-                          <div className="flex items-center space-x-3">
-                            <div className="w-10 h-10 bg-gradient-to-br from-emerald-600 to-green-700 rounded-xl flex items-center justify-center">
-                              <span className="text-white font-bold text-sm">
-                                {getInitials(member.firstName, member.lastName)}
-                              </span>
-                            </div>
-                            <div>
-                              <p className="font-semibold text-gray-900">
-                                {member.firstName} {member.lastName}
-                              </p>
-                              <p className="text-sm text-gray-500">@{member.username}</p>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="py-4 px-6">
-                          <p className="text-sm text-gray-900">{member.email}</p>
-                          <p className="text-sm text-gray-500">{member.phoneNumber}</p>
-                        </td>
-                        <td className="py-4 px-6">
-                          <div className="flex flex-wrap gap-1">
-                            {getPermissionNames(member.permissions).map((perm, i) => (
-                              <span
-                                key={i}
-                                className="inline-flex items-center px-2 py-1 bg-emerald-100 text-emerald-700 rounded text-xs font-medium"
-                              >
-                                {perm}
-                              </span>
-                            ))}
-                          </div>
-                        </td>
-                        <td className="py-4 px-6">
-                          {member.isActive ? (
-                            <span className="inline-flex items-center px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
-                              <span className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></span>
-                              Active
+                  {paginatedStaff.map((member) => (
+                    <motion.tr
+                      key={member._id}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="hover:bg-emerald-50/30 transition-colors"
+                    >
+                      <td className="py-4 px-6">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 bg-gradient-to-br from-emerald-600 to-green-700 rounded-xl flex items-center justify-center">
+                            <span className="text-white font-bold text-sm">
+                              {getInitials(member.firstName, member.lastName)}
                             </span>
-                          ) : (
-                            <span className="inline-flex items-center px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium">
-                              Inactive
-                            </span>
-                          )}
-                        </td>
-                        <td className="py-4 px-6">
-                          <p className="text-sm text-gray-900">
-                            {member.lastLogin ? new Date(member.lastLogin).toLocaleDateString() : 'Never'}
-                          </p>
-                        </td>
-                        <td className="py-4 px-6">
-                          <div className="flex items-center justify-end space-x-2">
-                            <ActionButton
-                              icon="pi-pencil"
-                              color="emerald"
-                              onClick={() => editStaff(member)}
-                              title="Edit"
-                            />
-                            <ActionButton
-                              icon="pi-envelope"
-                              color="blue"
-                              onClick={() => handleResendInvite(member._id)}
-                              title="Resend Invite"
-                            />
-                            <ActionButton
-                              icon="pi-trash"
-                              color="red"
-                              onClick={() => handleDelete(member._id)}
-                              title={member.isActive ? 'Deactivate' : 'Delete'}
-                            />
                           </div>
-                        </td>
-                      </motion.tr>
-                    )
-                  })}
+                          <div>
+                            <p className="font-semibold text-gray-900">
+                              {member.firstName} {member.lastName}
+                            </p>
+                            <p className="text-sm text-gray-500">@{member.username}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="py-4 px-6">
+                        <p className="text-sm text-gray-900">{member.email}</p>
+                        <p className="text-sm text-gray-500">{member.phoneNumber}</p>
+                      </td>
+                      <td className="py-4 px-6">
+                        <div className="flex flex-wrap gap-1">
+                          {getPermissionNames(member.permissions).map((perm, i) => (
+                            <span key={i} className="inline-flex items-center px-2 py-1 bg-emerald-100 text-emerald-700 rounded text-xs font-medium">
+                              {perm}
+                            </span>
+                          ))}
+                        </div>
+                      </td>
+                      <td className="py-4 px-6">
+                        {member.isActive ? (
+                          <span className="inline-flex items-center px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
+                            <span className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></span>
+                            Active
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium">
+                            Inactive
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-4 px-6">
+                        <p className="text-sm text-gray-900">
+                          {member.lastLogin ? new Date(member.lastLogin).toLocaleDateString() : 'Never'}
+                        </p>
+                      </td>
+                      <td className="py-4 px-6">
+                        <div className="flex items-center justify-end space-x-2">
+                          <ActionButton icon="pi-pencil" color="emerald" onClick={() => editStaff(member)} title="Edit" />
+                          <ActionButton
+                            icon="pi-envelope"
+                            color="blue"
+                            onClick={() => handleResendInvite(member._id)}
+                            title={shouldDisableResend(member) ? 'Cannot resend - User already logged in or active' : 'Resend Invite'}
+                            disabled={shouldDisableResend(member)}
+                          />
+                          <ActionButton
+                            icon="pi-trash"
+                            color="red"
+                            onClick={() => {
+                              setSelectedStaff(member);
+                              setShowDeleteModal(true);
+                            }}
+                            title="Delete Options"
+                          />
+                        </div>
+                      </td>
+                    </motion.tr>
+                  ))}
                 </AnimatePresence>
               </tbody>
             </table>
@@ -721,82 +702,53 @@ const StaffManagement = () => {
         <div className="space-y-4">
           <AnimatePresence>
             {paginatedStaff.map((member) => (
-              <motion.div
-                key={member._id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className="bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-xl border border-emerald-200/30 p-4"
-              >
+              <motion.div key={member._id} className="bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-xl border border-emerald-200/30 p-4">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center space-x-3">
                     <div className="w-12 h-12 bg-gradient-to-br from-emerald-600 to-green-700 rounded-xl flex items-center justify-center">
-                      <span className="text-white font-bold text-lg">
-                        {getInitials(member.firstName, member.lastName)}
-                      </span>
+                      <span className="text-white font-bold text-lg">{getInitials(member.firstName, member.lastName)}</span>
                     </div>
                     <div>
-                      <h3 className="font-semibold text-gray-900">
-                        {member.firstName} {member.lastName}
-                      </h3>
+                      <h3 className="font-semibold text-gray-900">{member.firstName} {member.lastName}</h3>
                       <p className="text-sm text-gray-500">@{member.username}</p>
                     </div>
                   </div>
                   {member.isActive ? (
-                    <span className="inline-flex items-center px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
-                      Active
-                    </span>
+                    <span className="inline-flex items-center px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">Active</span>
                   ) : (
-                    <span className="inline-flex items-center px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium">
-                      Inactive
-                    </span>
+                    <span className="inline-flex items-center px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium">Inactive</span>
                   )}
                 </div>
 
                 <div className="space-y-2 mb-3">
-                  <p className="text-sm text-gray-600 flex items-center">
-                    <i className="pi pi-envelope w-5 text-emerald-600"></i>
-                    {member.email}
-                  </p>
-                  <p className="text-sm text-gray-600 flex items-center">
-                    <i className="pi pi-phone w-5 text-emerald-600"></i>
-                    {member.phoneNumber || 'No phone'}
-                  </p>
-                  <p className="text-sm text-gray-600 flex items-center">
-                    <i className="pi pi-calendar w-5 text-emerald-600"></i>
-                    Last active: {member.lastLogin ? new Date(member.lastLogin).toLocaleDateString() : 'Never'}
-                  </p>
+                  <p className="text-sm text-gray-600 flex items-center"><i className="pi pi-envelope w-5 text-emerald-600"></i>{member.email}</p>
+                  <p className="text-sm text-gray-600 flex items-center"><i className="pi pi-phone w-5 text-emerald-600"></i>{member.phoneNumber || 'No phone'}</p>
+                  <p className="text-sm text-gray-600 flex items-center"><i className="pi pi-calendar w-5 text-emerald-600"></i>Last active: {member.lastLogin ? new Date(member.lastLogin).toLocaleDateString() : 'Never'}</p>
                 </div>
 
                 <div className="flex flex-wrap gap-1 mb-4">
                   {getPermissionNames(member.permissions).map((perm, i) => (
-                    <span
-                      key={i}
-                      className="inline-flex items-center px-2 py-1 bg-emerald-100 text-emerald-700 rounded text-xs font-medium"
-                    >
-                      {perm}
-                    </span>
+                    <span key={i} className="inline-flex items-center px-2 py-1 bg-emerald-100 text-emerald-700 rounded text-xs font-medium">{perm}</span>
                   ))}
                 </div>
 
                 <div className="flex justify-end space-x-2 pt-2 border-t border-gray-200">
-                  <ActionButton
-                    icon="pi-pencil"
-                    color="emerald"
-                    onClick={() => editStaff(member)}
-                    title="Edit"
-                  />
+                  <ActionButton icon="pi-pencil" color="emerald" onClick={() => editStaff(member)} title="Edit" />
                   <ActionButton
                     icon="pi-envelope"
                     color="blue"
                     onClick={() => handleResendInvite(member._id)}
-                    title="Resend Invite"
+                    disabled={shouldDisableResend(member)}
+                    title={shouldDisableResend(member) ? 'Cannot resend - User already logged in or active' : 'Resend Invite'}
                   />
                   <ActionButton
                     icon="pi-trash"
                     color="red"
-                    onClick={() => handleDelete(member._id)}
-                    title={member.isActive ? 'Deactivate' : 'Delete'}
+                    onClick={() => {
+                      setSelectedStaff(member);
+                      setShowDeleteModal(true);
+                    }}
+                    title="Delete Options"
                   />
                 </div>
               </motion.div>
@@ -812,32 +764,11 @@ const StaffManagement = () => {
             Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredStaff.length)} of {filteredStaff.length} staff
           </p>
           <div className="flex items-center space-x-2">
-            <button
-              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
-              className="px-3 py-1 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-            >
-              Previous
-            </button>
+            <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="px-3 py-1 border border-gray-300 rounded-lg disabled:opacity-50">Previous</button>
             {[...Array(totalPages)].map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setCurrentPage(i + 1)}
-                className={`px-3 py-1 rounded-lg ${currentPage === i + 1
-                  ? 'bg-emerald-600 text-white'
-                  : 'border border-gray-300 hover:bg-gray-50'
-                  }`}
-              >
-                {i + 1}
-              </button>
+              <button key={i} onClick={() => setCurrentPage(i + 1)} className={`px-3 py-1 rounded-lg ${currentPage === i + 1 ? 'bg-emerald-600 text-white' : 'border border-gray-300'}`}>{i + 1}</button>
             ))}
-            <button
-              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
-              className="px-3 py-1 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-            >
-              Next
-            </button>
+            <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="px-3 py-1 border border-gray-300 rounded-lg disabled:opacity-50">Next</button>
           </div>
         </div>
       )}
@@ -850,32 +781,15 @@ const StaffManagement = () => {
           </div>
           <h3 className="text-lg font-semibold text-gray-900 mb-2">No Staff Members Found</h3>
           <p className="text-gray-600 mb-6">
-            {searchTerm || statusFilter !== 'all' || permissionFilter !== 'all'
-              ? 'Try adjusting your filters'
-              : 'Get started by adding your first staff member'}
+            {searchTerm || statusFilter !== 'all' || permissionFilter !== 'all' ? 'Try adjusting your filters' : 'Get started by adding your first staff member'}
           </p>
           {(searchTerm || statusFilter !== 'all' || permissionFilter !== 'all') ? (
-            <button
-              onClick={() => {
-                setSearchTerm('');
-                setStatusFilter('all');
-                setPermissionFilter('all');
-              }}
-              className="inline-flex items-center space-x-2 bg-gradient-to-r from-emerald-600 to-green-600 text-white px-6 py-3 rounded-xl hover:shadow-lg transition-all"
-            >
-              <i className="pi pi-filter-slash"></i>
-              <span>Clear Filters</span>
+            <button onClick={() => { setSearchTerm(''); setStatusFilter('all'); setPermissionFilter('all'); }} className="inline-flex items-center space-x-2 bg-gradient-to-r from-emerald-600 to-green-600 text-white px-6 py-3 rounded-xl">
+              <i className="pi pi-filter-slash"></i><span>Clear Filters</span>
             </button>
           ) : (
-            <button
-              onClick={() => {
-                resetForm();
-                setShowModal(true);
-              }}
-              className="inline-flex items-center space-x-2 bg-gradient-to-r from-emerald-600 to-green-600 text-white px-6 py-3 rounded-xl hover:shadow-lg transition-all"
-            >
-              <i className="pi pi-user-plus"></i>
-              <span>Add Staff Member</span>
+            <button onClick={() => { resetForm(); setShowModal(true); }} className="inline-flex items-center space-x-2 bg-gradient-to-r from-emerald-600 to-green-600 text-white px-6 py-3 rounded-xl">
+              <i className="pi pi-user-plus"></i><span>Add Staff Member</span>
             </button>
           )}
         </div>
@@ -887,11 +801,7 @@ const StaffManagement = () => {
           <StaffModal
             formData={formData}
             selectedStaff={selectedStaff}
-            onClose={() => {
-              setShowModal(false);
-              resetForm();
-              setModalError(''); // Clear modal error on close
-            }}
+            onClose={() => { setShowModal(false); resetForm(); setModalError(''); }}
             onSubmit={handleSubmit}
             onChange={handleInputChange}
             loading={loading}
@@ -905,13 +815,7 @@ const StaffManagement = () => {
       <AnimatePresence>
         {showBulkModal && (
           <BulkImportModal
-            onClose={() => {
-              setShowBulkModal(false);
-              setBulkData([]);
-              setBulkPreview([]);
-              setBulkResults(null);
-              setModalError(''); // Clear modal error on close
-            }}
+            onClose={() => { setShowBulkModal(false); setBulkData([]); setBulkPreview([]); setBulkResults(null); setModalError(''); }}
             onFileUpload={handleFileUpload}
             onDownloadTemplate={downloadTemplate}
             onImport={handleBulkImport}
@@ -920,6 +824,18 @@ const StaffManagement = () => {
             bulkLoading={bulkLoading}
             modalError={modalError}
             setModalError={setModalError}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Delete Options Modal */}
+      <AnimatePresence>
+        {showDeleteModal && selectedStaff && (
+          <DeleteOptionsModal
+            staff={selectedStaff}
+            onClose={() => { setShowDeleteModal(false); setSelectedStaff(null); setDeleteType(null); }}
+            onDeactivate={() => handleDeactivate(selectedStaff._id)}
+            onPermanentDelete={() => handlePermanentDelete(selectedStaff._id)}
           />
         )}
       </AnimatePresence>
@@ -934,14 +850,10 @@ const StatCard = ({ title, value, icon, color }) => {
     blue: 'from-blue-500 to-blue-600',
     amber: 'from-amber-500 to-amber-600'
   };
-
   return (
     <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-xl border border-emerald-200/30 p-6">
       <div className="flex items-center justify-between">
-        <div>
-          <p className="text-gray-600 text-sm">{title}</p>
-          <p className="text-3xl font-bold text-gray-900 mt-2">{value}</p>
-        </div>
+        <div><p className="text-gray-600 text-sm">{title}</p><p className="text-3xl font-bold text-gray-900 mt-2">{value}</p></div>
         <div className={`w-12 h-12 bg-gradient-to-br ${colorClasses[color]} rounded-2xl flex items-center justify-center shadow-lg`}>
           <i className={`pi ${icon} text-white text-lg`}></i>
         </div>
@@ -950,8 +862,8 @@ const StatCard = ({ title, value, icon, color }) => {
   );
 };
 
-// ===== Action Button Component =====
-const ActionButton = ({ icon, color, onClick, title }) => {
+// ===== Action Button Component with disabled support =====
+const ActionButton = ({ icon, color, onClick, title, disabled = false }) => {
   const colorClasses = {
     emerald: 'hover:bg-emerald-100 text-emerald-600',
     blue: 'hover:bg-blue-100 text-blue-600',
@@ -961,7 +873,8 @@ const ActionButton = ({ icon, color, onClick, title }) => {
   return (
     <button
       onClick={onClick}
-      className={`p-2 ${colorClasses[color]} rounded-lg transition-colors`}
+      disabled={disabled}
+      className={`p-2 rounded-lg transition-colors ${disabled ? 'opacity-40 cursor-not-allowed bg-gray-100 text-gray-400' : colorClasses[color]}`}
       title={title}
     >
       <i className={`pi ${icon}`}></i>
@@ -969,9 +882,8 @@ const ActionButton = ({ icon, color, onClick, title }) => {
   );
 };
 
-// ===== Staff Modal Component =====
-// ===== Staff Modal Component =====
-const StaffModal = ({ formData, selectedStaff, onClose, onSubmit, onChange, loading, modalError, setModalError }) => {
+// ===== Staff Modal Component with Status Toggle =====
+const StaffModal = ({ formData, selectedStaff, onClose, onSubmit, onChange, loading, modalError }) => {
   const permissions = [
     { key: 'canViewAnalytics', label: 'View Analytics', icon: 'pi-chart-line' },
     { key: 'canGenerateCards', label: 'Generate Cards', icon: 'pi-id-card' },
@@ -1003,148 +915,153 @@ const StaffModal = ({ formData, selectedStaff, onClose, onSubmit, onChange, load
             <h2 className="text-xl font-bold text-gray-900">
               {selectedStaff ? 'Edit Staff Member' : 'Add New Staff Member'}
             </h2>
-            <button
-              onClick={onClose}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            >
+            <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg">
               <i className="pi pi-times text-gray-600"></i>
             </button>
           </div>
         </div>
 
         <form onSubmit={onSubmit} className="p-6 space-y-6">
-
-          {/* ===== MODAL ERROR MESSAGE (INSIDE MODAL) ===== */}
           <AnimatePresence>
             {modalError && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="bg-red-50 border-l-4 border-red-500 rounded-lg p-4 flex items-start"
-              >
-                <div className="flex-shrink-0">
-                  <i className="pi pi-exclamation-triangle text-red-500 text-xl"></i>
-                </div>
-                <div className="ml-3 flex-1">
-                  <p className="text-sm font-medium text-red-800">{modalError}</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setModalError('')}
-                  className="ml-4 flex-shrink-0 text-red-500 hover:text-red-600"
-                >
-                  <i className="pi pi-times"></i>
-                </button>
+              <motion.div className="bg-red-50 border-l-4 border-red-500 rounded-lg p-4">
+                <p className="text-sm font-medium text-red-800">{modalError}</p>
               </motion.div>
             )}
           </AnimatePresence>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                First Name <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                name="firstName"
-                value={formData.firstName}
-                onChange={onChange}
-                required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                placeholder="Enter first name"
-              />
+              <label className="block text-sm font-medium text-gray-700 mb-2">First Name <span className="text-red-500">*</span></label>
+              <input type="text" name="firstName" value={formData.firstName} onChange={onChange} required className="w-full px-4 py-2 border border-gray-300 rounded-lg" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Last Name <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                name="lastName"
-                value={formData.lastName}
-                onChange={onChange}
-                required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                placeholder="Enter last name"
-              />
+              <label className="block text-sm font-medium text-gray-700 mb-2">Last Name <span className="text-red-500">*</span></label>
+              <input type="text" name="lastName" value={formData.lastName} onChange={onChange} required className="w-full px-4 py-2 border border-gray-300 rounded-lg" />
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Email <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={onChange}
-                required
-                disabled={!!selectedStaff}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
-                placeholder="staff@school.com"
-              />
+              <label className="block text-sm font-medium text-gray-700 mb-2">Email <span className="text-red-500">*</span></label>
+              <input type="email" name="email" value={formData.email} onChange={onChange} required disabled={!!selectedStaff} className="w-full px-4 py-2 border border-gray-300 rounded-lg disabled:bg-gray-100" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Phone Number
-              </label>
-              <input
-                type="tel"
-                name="phoneNumber"
-                value={formData.phoneNumber}
-                onChange={onChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                placeholder="+250 788 123 456"
-              />
+              <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
+              <input type="tel" name="phoneNumber" value={formData.phoneNumber} onChange={onChange} className="w-full px-4 py-2 border border-gray-300 rounded-lg" />
             </div>
           </div>
 
+          {/* Status Toggle - Only show in edit mode */}
+          {selectedStaff && (
+            <div className="bg-gray-50 rounded-lg p-4">
+              <label className="flex items-center justify-between cursor-pointer">
+                <div>
+                  <span className="text-sm font-medium text-gray-700">Account Status</span>
+                  <p className="text-xs text-gray-500 mt-1">Toggle to activate or deactivate this staff member</p>
+                </div>
+                <div className="relative inline-block w-12 mr-2 align-middle select-none">
+                  <input
+                    type="checkbox"
+                    name="isActive"
+                    checked={formData.isActive}
+                    onChange={onChange}
+                    className="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"
+                  />
+                  <label className={`toggle-label block overflow-hidden h-6 rounded-full cursor-pointer ${formData.isActive ? 'bg-emerald-500' : 'bg-gray-300'}`}></label>
+                </div>
+              </label>
+            </div>
+          )}
+
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-4">
-              Permissions
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-4">Permissions</label>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {permissions.map((perm) => (
                 <label key={perm.key} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    name={`perm_${perm.key}`}
-                    checked={formData.permissions?.[perm.key] || false}
-                    onChange={onChange}
-                    className="w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500"
-                  />
-                  <div className="flex items-center space-x-2">
-                    <i className={`pi ${perm.icon} text-emerald-600`}></i>
-                    <span className="text-sm font-medium text-gray-700">{perm.label}</span>
-                  </div>
+                  <input type="checkbox" name={`perm_${perm.key}`} checked={formData.permissions?.[perm.key] || false} onChange={onChange} className="w-4 h-4 text-emerald-600 rounded" />
+                  <div className="flex items-center space-x-2"><i className={`pi ${perm.icon} text-emerald-600`}></i><span className="text-sm font-medium text-gray-700">{perm.label}</span></div>
                 </label>
               ))}
             </div>
           </div>
 
           <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-6 py-2 bg-gradient-to-r from-emerald-600 to-green-600 text-white rounded-lg hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
-            >
-              {loading && (
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-              )}
+            <button type="button" onClick={onClose} className="px-6 py-2 border border-gray-300 rounded-lg">Cancel</button>
+            <button type="submit" disabled={loading} className="px-6 py-2 bg-gradient-to-r from-emerald-600 to-green-600 text-white rounded-lg disabled:opacity-50 flex items-center space-x-2">
+              {loading && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>}
               <span>{loading ? 'Saving...' : selectedStaff ? 'Update Staff' : 'Add Staff'}</span>
             </button>
           </div>
         </form>
+      </motion.div>
+    </motion.div>
+  );
+};
+
+// ===== Delete Options Modal =====
+const DeleteOptionsModal = ({ staff, onClose, onDeactivate, onPermanentDelete }) => {
+  const [confirmText, setConfirmText] = useState('');
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.9, opacity: 0 }}
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-md"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="p-6 border-b border-gray-200">
+          <h2 className="text-xl font-bold text-gray-900">Delete Staff Member</h2>
+          <p className="text-sm text-gray-600 mt-1">Choose an option for {staff.firstName} {staff.lastName}</p>
+        </div>
+
+        <div className="p-6 space-y-4">
+          {/* Deactivate Option */}
+          <button
+            onClick={onDeactivate}
+            className="w-full text-left p-4 border border-amber-200 rounded-xl hover:bg-amber-50 transition-colors"
+          >
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
+                <i className="pi pi-ban text-amber-600"></i>
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-gray-900">Deactivate Account</h3>
+                <p className="text-sm text-gray-600">Staff member won't be able to login. Data is preserved. Can be reactivated later.</p>
+              </div>
+            </div>
+          </button>
+
+          {/* Permanent Delete Option */}
+          <button
+            onClick={onPermanentDelete}
+            className="w-full text-left p-4 border border-red-200 rounded-xl hover:bg-red-50 transition-colors"
+          >
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                <i className="pi pi-trash text-red-600"></i>
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-gray-900">Permanently Delete</h3>
+                <p className="text-sm text-gray-600">⚠️ This action cannot be undone. All staff data will be permanently removed.</p>
+              </div>
+            </div>
+          </button>
+        </div>
+
+        <div className="p-6 border-t border-gray-200">
+          <button onClick={onClose} className="w-full px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+            Cancel
+          </button>
+        </div>
       </motion.div>
     </motion.div>
   );
@@ -1170,41 +1087,19 @@ const BulkImportModal = ({ onClose, onFileUpload, onDownloadTemplate, onImport, 
         <div className="p-6 border-b border-gray-200 sticky top-0 bg-white">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-bold text-gray-900">Bulk Import Staff</h2>
-            <button
-              onClick={onClose}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <i className="pi pi-times text-gray-600"></i>
-            </button>
+            <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg"><i className="pi pi-times text-gray-600"></i></button>
           </div>
         </div>
 
         <div className="p-6 space-y-6">
-          {/* ===== MODAL ERROR MESSAGE (INSIDE BULK MODAL) ===== */}
           <AnimatePresence>
             {modalError && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="bg-red-50 border-l-4 border-red-500 rounded-lg p-4 flex items-start"
-              >
-                <div className="flex-shrink-0">
-                  <i className="pi pi-exclamation-triangle text-red-500 text-xl"></i>
-                </div>
-                <div className="ml-3 flex-1">
-                  <p className="text-sm font-medium text-red-800">{modalError}</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setModalError('')}
-                  className="ml-4 flex-shrink-0 text-red-500 hover:text-red-600"
-                >
-                  <i className="pi pi-times"></i>
-                </button>
+              <motion.div className="bg-red-50 border-l-4 border-red-500 rounded-lg p-4">
+                <p className="text-sm font-medium text-red-800">{modalError}</p>
               </motion.div>
             )}
           </AnimatePresence>
+
           {!bulkResults ? (
             <>
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -1218,30 +1113,15 @@ const BulkImportModal = ({ onClose, onFileUpload, onDownloadTemplate, onImport, 
               </div>
 
               <div className="flex justify-center">
-                <button
-                  onClick={onDownloadTemplate}
-                  className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-emerald-600 to-green-600 text-white rounded-xl hover:shadow-lg transition-all"
-                >
-                  <i className="pi pi-download"></i>
-                  <span>Download Template</span>
+                <button onClick={onDownloadTemplate} className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-emerald-600 to-green-600 text-white rounded-xl">
+                  <i className="pi pi-download"></i><span>Download Template</span>
                 </button>
               </div>
 
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-                <input
-                  type="file"
-                  id="bulkFile"
-                  accept=".xlsx,.xls,.csv"
-                  onChange={onFileUpload}
-                  className="hidden"
-                />
-                <label
-                  htmlFor="bulkFile"
-                  className="cursor-pointer flex flex-col items-center space-y-2"
-                >
-                  <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center">
-                    <i className="pi pi-upload text-emerald-600 text-2xl"></i>
-                  </div>
+                <input type="file" id="bulkFile" accept=".xlsx,.xls,.csv" onChange={onFileUpload} className="hidden" />
+                <label htmlFor="bulkFile" className="cursor-pointer flex flex-col items-center space-y-2">
+                  <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center"><i className="pi pi-upload text-emerald-600 text-2xl"></i></div>
                   <span className="text-lg font-medium text-gray-700">Click to upload file</span>
                   <span className="text-sm text-gray-500">Excel or CSV files only</span>
                 </label>
@@ -1253,23 +1133,9 @@ const BulkImportModal = ({ onClose, onFileUpload, onDownloadTemplate, onImport, 
                   <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200">
                       <thead className="bg-gray-50">
-                        <tr>
-                          {Object.keys(bulkPreview[0]).map(key => (
-                            <th key={key} className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                              {key}
-                            </th>
-                          ))}
-                        </tr>
+                        <tr>{Object.keys(bulkPreview[0]).map(key => <th key={key} className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">{key}</th>)}</tr>
                       </thead>
-                      <tbody className="divide-y divide-gray-200">
-                        {bulkPreview.map((row, i) => (
-                          <tr key={i}>
-                            {Object.values(row).map((val, j) => (
-                              <td key={j} className="px-4 py-2 text-sm text-gray-900">{String(val)}</td>
-                            ))}
-                          </tr>
-                        ))}
-                      </tbody>
+                      <tbody>{bulkPreview.map((row, i) => (<tr key={i}>{Object.values(row).map((val, j) => <td key={j} className="px-4 py-2 text-sm text-gray-900">{String(val)}</td>)}</tr>))}</tbody>
                     </table>
                   </div>
                 </div>
@@ -1277,67 +1143,23 @@ const BulkImportModal = ({ onClose, onFileUpload, onDownloadTemplate, onImport, 
 
               {bulkPreview.length > 0 && (
                 <div className="flex justify-end space-x-3 pt-4">
-                  <button
-                    onClick={onClose}
-                    className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={onImport}
-                    disabled={bulkLoading}
-                    className="px-6 py-2 bg-gradient-to-r from-emerald-600 to-green-600 text-white rounded-lg hover:shadow-lg disabled:opacity-50"
-                  >
-                    {bulkLoading ? (
-                      <span className="flex items-center space-x-2">
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                        <span>Importing...</span>
-                      </span>
-                    ) : (
-                      'Import Staff'
-                    )}
+                  <button onClick={onClose} className="px-6 py-2 border border-gray-300 rounded-lg">Cancel</button>
+                  <button onClick={onImport} disabled={bulkLoading} className="px-6 py-2 bg-gradient-to-r from-emerald-600 to-green-600 text-white rounded-lg disabled:opacity-50">
+                    {bulkLoading ? <span className="flex items-center space-x-2"><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div><span>Importing...</span></span> : 'Import Staff'}
                   </button>
                 </div>
               )}
             </>
           ) : (
             <div className="space-y-6">
-              <div className={`p-4 rounded-lg ${bulkResults.success.length > 0 ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
+              <div className={`p-4 rounded-lg ${bulkResults.success.length > 0 ? 'bg-green-50' : 'bg-red-50'}`}>
                 <h3 className="font-semibold text-lg mb-2">Import Results</h3>
-                <p className="text-sm mb-2">✅ Success: {bulkResults.success.length}</p>
-                <p className="text-sm mb-4">❌ Failed: {bulkResults.failed.length}</p>
-
-                {bulkResults.success.length > 0 && (
-                  <div className="mt-4">
-                    <h4 className="font-medium mb-2">Successfully Imported:</h4>
-                    <ul className="list-disc list-inside text-sm space-y-1">
-                      {bulkResults.success.map((item, i) => (
-                        <li key={i}>{item.name} ({item.email})</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                {bulkResults.failed.length > 0 && (
-                  <div className="mt-4">
-                    <h4 className="font-medium mb-2 text-red-600">Failed:</h4>
-                    <ul className="list-disc list-inside text-sm space-y-1">
-                      {bulkResults.failed.map((item, i) => (
-                        <li key={i}>{item.email}: {item.reason}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
+                <p>✅ Success: {bulkResults.success.length}</p>
+                <p>❌ Failed: {bulkResults.failed.length}</p>
+                {bulkResults.success.length > 0 && <div className="mt-4"><h4 className="font-medium mb-2">Successfully Imported:</h4><ul>{bulkResults.success.map((item, i) => <li key={i}>{item.name} ({item.email})</li>)}</ul></div>}
+                {bulkResults.failed.length > 0 && <div className="mt-4"><h4 className="font-medium mb-2 text-red-600">Failed:</h4><ul>{bulkResults.failed.map((item, i) => <li key={i}>{item.email}: {item.reason}</li>)}</ul></div>}
               </div>
-
-              <div className="flex justify-end">
-                <button
-                  onClick={onClose}
-                  className="px-6 py-2 bg-gradient-to-r from-emerald-600 to-green-600 text-white rounded-lg hover:shadow-lg"
-                >
-                  Done
-                </button>
-              </div>
+              <div className="flex justify-end"><button onClick={onClose} className="px-6 py-2 bg-gradient-to-r from-emerald-600 to-green-600 text-white rounded-lg">Done</button></div>
             </div>
           )}
         </div>
