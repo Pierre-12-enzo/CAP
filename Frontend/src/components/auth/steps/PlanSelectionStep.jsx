@@ -1,4 +1,4 @@
-// components/auth/steps/PlanSelectionStep.jsx
+// components/auth/steps/PlanSelectionStep.jsx - EMERALD THEME WITH PRIMEICONS
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { authAPI } from '../../../services/api';
@@ -10,7 +10,6 @@ const PlanSelectionStep = ({ onSubmit, initialData, loading }) => {
   const [loadingPlans, setLoadingPlans] = useState(true);
   const [error, setError] = useState('');
 
-  // Fetch plans on mount
   useEffect(() => {
     fetchPlans();
   }, []);
@@ -19,32 +18,19 @@ const PlanSelectionStep = ({ onSubmit, initialData, loading }) => {
     setLoadingPlans(true);
     try {
       const response = await authAPI.getPlans();
-      console.log('📥 Plans received:', response.plans);
       setPlans(response.plans || []);
-      
-      // Auto-select trial if available and no plan selected
+
       if (!selectedPlan) {
         const trialPlan = response.plans?.find(p => p.type === 'trial');
-        if (trialPlan) {
-          console.log('🎯 Auto-selecting trial plan:', trialPlan.name);
-          setSelectedPlan(trialPlan._id);
-        }
+        if (trialPlan) setSelectedPlan(trialPlan._id);
       }
-    } catch (error) {
-      console.error('Failed to load plans:', error);
+    } catch (err) {
       setError('Failed to load plans');
     } finally {
       setLoadingPlans(false);
     }
   };
 
-  // Handle plan selection
-  const handlePlanSelect = (planId) => {
-    console.log('🎯 Plan selected:', planId);
-    setSelectedPlan(planId);
-  };
-
-  // Handle submit
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!selectedPlan) {
@@ -53,8 +39,6 @@ const PlanSelectionStep = ({ onSubmit, initialData, loading }) => {
     }
 
     const selectedPlanData = plans.find(p => p._id === selectedPlan);
-    console.log('📤 Submitting plan:', selectedPlanData);
-    
     onSubmit({
       planId: selectedPlan,
       billingCycle,
@@ -63,26 +47,23 @@ const PlanSelectionStep = ({ onSubmit, initialData, loading }) => {
     });
   };
 
-  // Format price
-  const formatPrice = (price, cycle) => {
+  const formatPrice = (price) => {
     if (price === 0) return 'Free';
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
+      minimumFractionDigits: 0
     }).format(price);
   };
 
-  // Loading skeleton
   if (loadingPlans) {
     return (
       <div className="space-y-6">
-        <h2 className="text-2xl font-bold text-white mb-6">Choose Your Plan</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <h2 className="text-xl font-bold text-gray-900">Choose Your Plan</h2>
+        <div className="grid grid-cols-3 gap-4">
           {[1, 2, 3].map(i => (
             <div key={i} className="animate-pulse">
-              <div className="h-64 bg-white/5 rounded-2xl border border-white/10"></div>
+              <div className="h-56 bg-gray-100 rounded-2xl"></div>
             </div>
           ))}
         </div>
@@ -91,47 +72,39 @@ const PlanSelectionStep = ({ onSubmit, initialData, loading }) => {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-8">
+    <form onSubmit={handleSubmit} className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-white mb-2">Choose Your Plan</h2>
-        <p className="text-gray-400">Select the plan that best fits your school's needs</p>
+        <h2 className="text-xl font-bold text-gray-900 mb-1">Choose Your Plan</h2>
+        <p className="text-sm text-gray-600">Select the plan that best fits your school's needs</p>
       </div>
 
-      {/* Billing cycle toggle - hide for trial */}
+      {/* Billing toggle */}
       {plans.some(p => p.type === 'paid') && (
         <div className="flex justify-center">
-          <div className="bg-white/5 p-1 rounded-xl inline-flex">
+          <div className="bg-gray-100 p-1 rounded-xl inline-flex">
             <button
               type="button"
               onClick={() => setBillingCycle('monthly')}
-              className={`px-6 py-2 rounded-lg font-medium transition-all ${
-                billingCycle === 'monthly'
-                  ? 'bg-cyan-500 text-white'
-                  : 'text-gray-400 hover:text-white'
-              }`}
+              className={`px-5 py-1.5 rounded-lg text-sm font-medium transition-all ${billingCycle === 'monthly' ? 'bg-white text-emerald-700 shadow' : 'text-gray-600'
+                }`}
             >
               Monthly
             </button>
             <button
               type="button"
               onClick={() => setBillingCycle('yearly')}
-              className={`px-6 py-2 rounded-lg font-medium transition-all ${
-                billingCycle === 'yearly'
-                  ? 'bg-cyan-500 text-white'
-                  : 'text-gray-400 hover:text-white'
-              }`}
+              className={`px-5 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center ${billingCycle === 'yearly' ? 'bg-white text-emerald-700 shadow' : 'text-gray-600'
+                }`}
             >
               Yearly
-              <span className="ml-2 text-xs bg-green-500 text-white px-2 py-0.5 rounded-full">
-                Save 20%
-              </span>
+              <span className="ml-2 text-xs bg-green-500 text-white px-1.5 py-0.5 rounded-full">-20%</span>
             </button>
           </div>
         </div>
       )}
 
       {/* Plans grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         {plans.map((plan) => {
           const price = billingCycle === 'monthly' ? plan.price.monthly : plan.price.yearly;
           const isSelected = selectedPlan === plan._id;
@@ -142,84 +115,62 @@ const PlanSelectionStep = ({ onSubmit, initialData, loading }) => {
               key={plan._id}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              onClick={() => handlePlanSelect(plan._id)}
-              className={`relative cursor-pointer rounded-2xl p-6 border-2 transition-all ${
-                isSelected
-                  ? 'border-cyan-400 bg-cyan-400/20 shadow-lg shadow-cyan-500/20'
-                  : 'border-white/10 bg-white/5 hover:border-white/30'
-              }`}
+              onClick={() => setSelectedPlan(plan._id)}
+              className={`relative cursor-pointer rounded-xl p-4 border-2 transition-all ${isSelected
+                  ? 'border-emerald-500 bg-emerald-50 shadow-lg'
+                  : 'border-gray-200 bg-white hover:border-emerald-200'
+                }`}
             >
-              {/* Popular badge */}
               {plan.isPopular && (
-                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                  <span className="bg-gradient-to-r from-cyan-500 to-purple-500 text-white text-xs font-bold px-3 py-1 rounded-full">
-                    MOST POPULAR
+                <div className="absolute -top-2 left-1/2 -translate-x-1/2">
+                  <span className="bg-gradient-to-r from-emerald-500 to-green-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                    POPULAR
                   </span>
                 </div>
               )}
 
-              {/* Trial badge */}
               {isTrial && (
-                <div className="absolute -top-3 right-4">
-                  <span className="bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full">
+                <div className="absolute -top-2 right-2">
+                  <span className="bg-green-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
                     FREE TRIAL
                   </span>
                 </div>
               )}
 
-              {/* Plan icon */}
-              <div className="text-4xl mb-4">
-                {isTrial ? '🎁' : plan.code === 'BASIC' ? '🚀' : '💎'}
+              <div className="mb-3">
+                <i className={`text-2xl ${isTrial ? 'pi pi-gift text-green-600' : plan.code === 'BASIC' ? 'pi pi-rocket text-blue-600' : 'pi pi-crown text-amber-600'}`}></i>
               </div>
 
-              {/* Plan name */}
-              <h3 className="text-xl font-bold text-white mb-2">{plan.name}</h3>
-              
-              {/* Price */}
-              <div className="mb-4">
+              <h3 className="text-base font-bold text-gray-900 mb-1">{plan.name}</h3>
+
+              <div className="mb-3">
                 {price === 0 ? (
-                  <span className="text-3xl font-bold text-white">Free</span>
+                  <span className="text-xl font-bold text-gray-900">Free</span>
                 ) : (
                   <>
-                    <span className="text-3xl font-bold text-white">
-                      {formatPrice(price, billingCycle)}
-                    </span>
-                    <span className="text-gray-400 ml-1">
-                      /{billingCycle === 'monthly' ? 'mo' : 'yr'}
-                    </span>
+                    <span className="text-xl font-bold text-gray-900">{formatPrice(price)}</span>
+                    <span className="text-gray-500 text-xs ml-1">/{billingCycle === 'monthly' ? 'mo' : 'yr'}</span>
                   </>
                 )}
-                {isTrial && (
-                  <p className="text-sm text-cyan-400 mt-1">
-                    {plan.trialDays}-day free trial
-                  </p>
-                )}
+                {isTrial && <p className="text-xs text-emerald-600 mt-0.5">{plan.trialDays}-day trial</p>}
               </div>
 
-              {/* Features */}
-              <ul className="space-y-3 mb-6">
-                {plan.features?.map((feature, index) => (
-                  <li key={index} className="flex items-start text-sm">
-                    <span className={`mr-2 ${feature.included ? 'text-green-400' : 'text-gray-500'}`}>
-                      {feature.included ? '✓' : '○'}
-                    </span>
-                    <span className={feature.included ? 'text-gray-300' : 'text-gray-500'}>
-                      {feature.name}
-                    </span>
+              <ul className="space-y-1.5 mb-4">
+                {plan.features?.slice(0, 4).map((feature, index) => (
+                  <li key={index} className="flex items-start text-xs">
+                    <i className={`pi ${feature.included ? 'pi-check-circle text-green-500' : 'pi-circle text-gray-300'} mr-1.5 text-xs mt-0.5`}></i>
+                    <span className={feature.included ? 'text-gray-700' : 'text-gray-400'}>{feature.name}</span>
                   </li>
                 ))}
               </ul>
 
-              {/* Selected indicator */}
               {isSelected && (
                 <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
-                  className="absolute top-4 right-4 w-6 h-6 bg-cyan-400 rounded-full flex items-center justify-center"
+                  className="absolute top-2 right-2 w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center"
                 >
-                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                  </svg>
+                  <i className="pi pi-check text-white text-xs"></i>
                 </motion.div>
               )}
             </motion.div>
@@ -227,29 +178,29 @@ const PlanSelectionStep = ({ onSubmit, initialData, loading }) => {
         })}
       </div>
 
-      {/* Error message */}
       <AnimatePresence>
         {error && (
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
+            initial={{ opacity: 0, y: -5 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="p-4 bg-red-500/20 border border-red-500/50 rounded-lg text-red-200"
+            exit={{ opacity: 0, y: -5 }}
+            className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm flex items-center"
           >
+            <i className="pi pi-exclamation-circle mr-2"></i>
             {error}
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Action buttons */}
-      <div className="flex justify-between pt-4">
+      <div className="flex justify-between pt-4 border-t border-gray-200">
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           type="button"
           onClick={() => window.history.back()}
-          className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-lg transition-colors"
+          className="px-5 py-2.5 text-gray-700 font-medium rounded-xl hover:bg-gray-100 transition-colors flex items-center"
         >
+          <i className="pi pi-arrow-left mr-2"></i>
           Back
         </motion.button>
 
@@ -258,9 +209,19 @@ const PlanSelectionStep = ({ onSubmit, initialData, loading }) => {
           whileTap={{ scale: 0.98 }}
           type="submit"
           disabled={loading || !selectedPlan}
-          className="px-8 py-3 bg-gradient-to-r from-cyan-500 to-purple-500 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-6 py-2.5 bg-gradient-to-r from-emerald-500 to-green-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all disabled:opacity-50 flex items-center"
         >
-          {loading ? 'Processing...' : 'Continue'}
+          {loading ? (
+            <>
+              <i className="pi pi-spinner pi-spin mr-2"></i>
+              Processing...
+            </>
+          ) : (
+            <>
+              Continue
+              <i className="pi pi-arrow-right ml-2"></i>
+            </>
+          )}
         </motion.button>
       </div>
     </form>
