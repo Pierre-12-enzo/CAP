@@ -38,15 +38,44 @@ const userSchema = new mongoose.Schema({
     phoneNumber: {
         type: String,
         trim: true,
-        // More flexible phone validation - allows various formats
+        set: function (v) {
+            if (!v) return v;
+            // Remove all non-digit characters
+            const digits = v.replace(/\D/g, '');
+
+            // Standardize to +250XXXXXXXXX format
+            if (digits.length === 9 && digits[0] === '7') {
+                return '+250' + digits;
+            }
+            if (digits.length === 12 && digits.startsWith('2507')) {
+                return '+' + digits;
+            }
+            if (digits.length === 13 && digits.startsWith('2507')) {
+                return '+' + digits;
+            }
+            // If already has +, keep as is
+            if (v.startsWith('+') && digits.length === 13 && digits.startsWith('2507')) {
+                return v.replace(/\s/g, '');
+            }
+            return v;
+        },
         validate: {
             validator: function (v) {
-                if (!v) return true; // Allow empty if not required
-                // Remove all non-digit characters and check length
+                if (!v) return true;
+                // Remove all non-digit characters for validation
                 const digits = v.replace(/\D/g, '');
-                return digits.length >= 9 && digits.length <= 15;
+
+                // Valid Rwanda formats:
+                // 9 digits starting with 7 (e.g., 788123456)
+                if (digits.length === 9 && digits[0] === '7') return true;
+                // 12 digits starting with 2507 (e.g., 250788123456)
+                if (digits.length === 12 && digits.startsWith('2507')) return true;
+                // 13 digits starting with 2507 (e.g., 250788123456 with +)
+                if (digits.length === 13 && digits.startsWith('2507')) return true;
+
+                return false;
             },
-            message: 'Phone number must have 9-15 digits'
+            message: 'Please enter a valid Rwanda phone number (e.g., 0788123456, +250788123456, or 0788 123 456)'
         }
     },
     password: {
@@ -289,16 +318,16 @@ userSchema.index({ createdAt: -1 });
 
 // Hash password before saving
 
-userSchema.pre('save', async function(next) {
+userSchema.pre('save', async function (next) {
     // Only hash if password is modified
     if (!this.isModified('password')) return next();
-    
+
     // Skip if password is already hashed (bcrypt hashes start with $2b$)
     if (this.password && this.password.startsWith('$2b$')) {
         console.log('✅ Password already hashed, skipping re-hash');
         return next();
     }
-    
+
     try {
         const salt = await bcrypt.genSalt(10);
         this.password = await bcrypt.hash(this.password, salt);

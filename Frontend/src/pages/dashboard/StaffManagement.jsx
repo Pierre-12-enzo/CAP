@@ -1,12 +1,10 @@
 // pages/dashboard/StaffManagement.jsx - UPDATED VERSION
 import React, { useState, useEffect } from 'react';
 import { staffAPI } from '../../services/api';
-import { useAuth } from '../../context/AuthContext';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import * as XLSX from 'xlsx';
 
 const StaffManagement = () => {
-  const { user } = useAuth();
   const [staff, setStaff] = useState([]);
   const [filteredStaff, setFilteredStaff] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -14,7 +12,6 @@ const StaffManagement = () => {
   const [showBulkModal, setShowBulkModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedStaff, setSelectedStaff] = useState(null);
-  const [deleteType, setDeleteType] = useState(null); // 'deactivate' or 'permanent'
   const [notification, setNotification] = useState({ show: false, type: '', message: '' });
   const [modalError, setModalError] = useState('');
 
@@ -299,7 +296,7 @@ const StaffManagement = () => {
     // Disable if user has logged in before (has lastLogin)
     if (member.lastLogin) return true;
     // Disable if user is active (already using the account)
-    if (member.isActive) return true;
+    if (!member.isActive) return true;
     return false;
   };
 
@@ -833,7 +830,7 @@ const StaffManagement = () => {
         {showDeleteModal && selectedStaff && (
           <DeleteOptionsModal
             staff={selectedStaff}
-            onClose={() => { setShowDeleteModal(false); setSelectedStaff(null); setDeleteType(null); }}
+            onClose={() => { setShowDeleteModal(false); setSelectedStaff(null); {/* //setDeleteType(null);  */} }} 
             onDeactivate={() => handleDeactivate(selectedStaff._id)}
             onPermanentDelete={() => handlePermanentDelete(selectedStaff._id)}
           />
@@ -1001,7 +998,7 @@ const StaffModal = ({ formData, selectedStaff, onClose, onSubmit, onChange, load
 
 // ===== Delete Options Modal =====
 const DeleteOptionsModal = ({ staff, onClose, onDeactivate, onPermanentDelete }) => {
-  const [confirmText, setConfirmText] = useState('');
+
 
   return (
     <motion.div
@@ -1068,7 +1065,7 @@ const DeleteOptionsModal = ({ staff, onClose, onDeactivate, onPermanentDelete })
 };
 
 // ===== Bulk Import Modal Component =====
-const BulkImportModal = ({ onClose, onFileUpload, onDownloadTemplate, onImport, bulkPreview, modalError, setModalError, bulkResults, setBulkResults, bulkLoading }) => {
+const BulkImportModal = ({ onClose, onFileUpload, onDownloadTemplate, onImport, bulkPreview, modalError, bulkResults, bulkLoading }) => {
   return (
     <motion.div
       initial={{ opacity: 0 }}

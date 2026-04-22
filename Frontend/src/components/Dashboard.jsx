@@ -1,4 +1,4 @@
-// components/Dashboard.jsx - WITH ROLE-BASED ROUTING
+// components/Dashboard.jsx - FIXED WITH PROPER RELATIVE ROUTING
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
@@ -27,6 +27,7 @@ import StaffCardStudio from '../pages/staff/CardStudio';
 import StaffAttendance from '../pages/staff/Attendance';
 import StaffStudents from '../pages/staff/Students';
 import StaffPermissions from '../pages/staff/Permissions';
+import StaffProfile from '../pages/staff/StaffProfile';
 
 // Theme Toggle Component
 const ThemeToggle = () => {
@@ -48,6 +49,33 @@ const Dashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const location = useLocation();
 
+  // Get the base path based on user role
+  const getBasePath = () => {
+    if (user?.role === 'super_admin') return '/super_admin';
+    if (user?.role === 'staff') return '/staff';
+    return '/dashboard';
+  };
+
+  const basePath = getBasePath();
+
+  useEffect(() => {
+    console.log('🔥 Dashboard mounted');
+    console.log('📍 Current path:', location.pathname);
+    console.log('👤 User from context:', user);
+    console.log('📁 Base path:', basePath);
+  }, [location, user]);
+
+  // Redirect based on role if accessing wrong dashboard
+  if (user?.role === 'super_admin' && !location.pathname.startsWith('/super_admin')) {
+    return <Navigate to="/super_admin/dashboard" replace />;
+  }
+  if (user?.role === 'staff' && !location.pathname.startsWith('/staff')) {
+    return <Navigate to="/staff/dashboard" replace />;
+  }
+  if (user?.role === 'admin' && location.pathname.startsWith('/super_admin')) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
   // Get navigation items based on role
   const getNavItems = () => {
     if (user?.role === 'super_admin') {
@@ -60,7 +88,6 @@ const Dashboard = () => {
         { icon: 'pi-book', label: 'Documentation', path: '/super_admin/documentation' }
       ];
     } else if (user?.role === 'staff') {
-      // Filter permissions for staff
       const permissions = user?.permissions || {};
       const items = [
         { icon: 'pi-chart-line', label: 'Overview', path: '/staff/dashboard', permission: true }
@@ -99,23 +126,6 @@ const Dashboard = () => {
     }
   };
 
-  useEffect(() => {
-    console.log('🔥 Dashboard mounted');
-    console.log('📍 Current path:', location.pathname);
-    console.log('👤 User from context:', user);
-    console.log('🎯 Nav items:', getNavItems());
-  }, [location, user]);
-  // Redirect based on role if accessing wrong dashboard
-  if (user?.role === 'super_admin' && !location.pathname.startsWith('/super_admin')) {
-    return <Navigate to="/super_admin/dashboard" replace />;
-  }
-  if (user?.role === 'staff' && !location.pathname.startsWith('/staff')) {
-    return <Navigate to="/staff/dashboard" replace />;
-  }
-  if (user?.role === 'admin' && location.pathname.startsWith('/super_admin')) {
-    return <Navigate to="/dashboard" replace />;
-  }
-
   // Helper to check if a route is active
   const isActiveRoute = (path) => {
     if (path === '/dashboard' || path === '/super_admin/dashboard' || path === '/staff/dashboard') {
@@ -147,8 +157,12 @@ const Dashboard = () => {
       '/super_admin/plans': 'Manage subscription plans',
       '/super_admin/subscriptions': 'View all subscriptions',
       '/super_admin/schools': 'Manage schools',
+      '/super_admin/settings': 'System configuration',
       '/staff/dashboard': 'Your dashboard',
-      '/staff/attendance': 'Mark attendance'
+      '/staff/attendance': 'Mark attendance',
+      '/staff/students': 'Manage students',
+      '/staff/card-studio': 'Generate ID cards',
+      '/staff/settings': 'Profile settings'
     };
     return subtitles[location.pathname] || 'Manage your operations';
   };
@@ -283,36 +297,43 @@ const Dashboard = () => {
         <main className="flex-1 overflow-auto p-4">
           <div className="w-full">
             <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-xl border border-emerald-200/30 overflow-hidden">
-              <Routes>
-                {/* Admin Routes */}
-                <Route path="" element={<Overview />} />
-                <Route path="card-studio" element={<CardStudio />} />
-                <Route path="permissions" element={<PermissionStudio />} />
-                <Route path="students" element={<StudentManagement />} />
-                <Route path="staff" element={<StaffManagement />} />
-                <Route path="subscription" element={<SubscriptionManagement />} />
-                <Route path="templates" element={<TemplateManager />} />
-                <Route path="settings" element={<Profile />} />
-                <Route path="documentation" element={<Documentation />} />
+              {/* ✅ FIXED: Use relative paths for each role */}
+              {user?.role === 'admin' && (
+                <Routes>
+                  <Route path="/" element={<Overview />} />
+                  <Route path="/card-studio" element={<CardStudio />} />
+                  <Route path="/permissions" element={<PermissionStudio />} />
+                  <Route path="/students" element={<StudentManagement />} />
+                  <Route path="/staff" element={<StaffManagement />} />
+                  <Route path="/subscription" element={<SubscriptionManagement />} />
+                  <Route path="/templates" element={<TemplateManager />} />
+                  <Route path="/settings" element={<Profile />} />
+                  <Route path="/documentation" element={<Documentation />} />
+                </Routes>
+              )}
 
-                {/* Super Admin Routes */}
-                <Route path="" element={<SuperAdminOverview />} />
-                <Route path="/plans" element={<PlansManager />} />
-                <Route path="/subscriptions" element={<SubscriptionsReports />} />
-                <Route path="/schools" element={<SchoolsManager />} />
-                <Route path="/settings" element={<SuperAdminSettings />} />
-                <Route path="/documentation" element={<Documentation />} />
-                <Route path="/settings" element={<Profile />} />
+              {user?.role === 'super_admin' && (
+                <Routes>
+                  <Route path="/" element={<SuperAdminOverview />} />
+                  <Route path="/plans" element={<PlansManager />} />
+                  <Route path="/subscriptions" element={<SubscriptionsReports />} />
+                  <Route path="/schools" element={<SchoolsManager />} />
+                  <Route path="/settings" element={<SuperAdminSettings />} />
+                  <Route path="/documentation" element={<Documentation />} />
+                </Routes>
+              )}
 
-                {/* Staff Routes */}
-                <Route path="" element={<StaffOverview />} />
-                <Route path="/card-studio" element={<StaffCardStudio />} />
-                <Route path="/attendance" element={<StaffAttendance />} />
-                <Route path="/students" element={<StaffStudents />} />
-                <Route path="/permissions" element={<StaffPermissions />} />
-                <Route path="/documentation" element={<Documentation />} />
-                <Route path="/settings" element={<Profile />} />
-              </Routes>
+              {user?.role === 'staff' && (
+                <Routes>
+                  <Route path="/" element={<StaffOverview />} />
+                  <Route path="/card-studio" element={<StaffCardStudio />} />
+                  <Route path="/attendance" element={<StaffAttendance />} />
+                  <Route path="/students" element={<StaffStudents />} />
+                  <Route path="/permissions" element={<StaffPermissions />} />
+                  <Route path="/settings" element={<StaffProfile />} />
+                  <Route path="/documentation" element={<Documentation />} />
+                </Routes>
+              )}
             </div>
           </div>
         </main>

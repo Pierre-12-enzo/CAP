@@ -631,44 +631,22 @@ router.post('/register/complete', async (req, res) => {
 // LOGIN (Enhanced with role-based redirect)
 // ============================================
 
+// routes/auth.js - COMPLETE LOGIN ROUTE with Staff First Login Check
 router.post('/login', async (req, res) => {
     try {
         const { email, password } = req.body;
 
         console.log('🔐 Login attempt for:', email);
 
-        const user = await User.findOne({ email: email.toLowerCase() }).select('+password');
+        // Find user with populated school data
+        const user = await User.findOne({ email: email.toLowerCase() })
+            .select('+password')
+            .populate('schoolId', 'name logo subscription');
 
         if (!user) {
             console.log('❌ User not found:', email);
             return res.status(401).json({ success: false, error: 'Invalid credentials' });
         }
-
-        // ✅ Check if user needs to change password
-        if (user.role === 'staff' && user.metadata?.needsPasswordChange) {
-            console.log('⚠️ Staff user needs to change password at first login:', email);
-
-            const needsPasswordChange = user.metadata?.needsPasswordChange
-        }
-
-
-        console.log('👤 User found:', {
-            id: user._id,
-            email: user.email,
-            role: user.role,
-            hasPassword: !!user.password
-        });
-
-        // Test password comparison
-        const isMatch = await bcrypt.compare(password, user.password);
-        console.log('🔐 Password match result:', isMatch);
-
-        if (!isMatch) {
-            console.log('❌ Password mismatch for:', email);
-            return res.status(401).json({ success: false, error: 'Invalid credentials' });
-        }
-
-
 
         // Check if account is active
         if (!user.isActive) {
@@ -676,6 +654,20 @@ router.post('/login', async (req, res) => {
                 success: false,
                 error: 'Your account has been deactivated. Contact support.'
             });
+        }
+
+        // Verify password
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            console.log('❌ Password mismatch for:', email);
+            return res.status(401).json({ success: false, error: 'Invalid credentials' });
+        }
+
+        // ✅ CHECK FIRST LOGIN FOR STAFF ONLY
+        const isFirstLogin = user.role === 'staff' && user.metadata?.needsPasswordChange === true;
+        
+        if (isFirstLogin) {
+            console.log('⚠️ First login for staff user:', email, '- Will redirect to password change');
         }
 
         // Update last login
@@ -688,62 +680,65 @@ router.post('/login', async (req, res) => {
             { expiresIn: '24h' }
         );
 
-        // Determine dashboard redirect based on role
+        // ✅ Determine redirect based on role AND first login status
         let redirectTo = '/dashboard';
+        
         if (user.role === 'super_admin') {
             redirectTo = '/super-admin/dashboard';
         } else if (user.role === 'admin') {
             redirectTo = '/dashboard';
         } else if (user.role === 'staff') {
-            redirectTo = '/staff/settings';
+            // ✅ Staff: Redirect to settings/password change on first login
+            if (isFirstLogin) {
+                redirectTo = '/staff/settings?forcePasswordChange=true';
+            } else {
+                redirectTo = '/staff/dashboard';
+            }
         }
 
-        // Build response based on role
-        const response = {
-            success: true,
-            message: 'Login successful',
-            token,
-            redirectTo,
-            user: {
-                id: user._id,
-                firstName: user.firstName,
-                lastName: user.lastName,
-                email: user.email,
-                username: user.username,
-                role: user.role,
-                initials: user.initials,
-                avatar: user.avatar.url,
-                school: user.schoolId ? {
-                    id: user.schoolId._id,
-                    name: user.schoolId.name,
-                    logo: user.schoolId.logo?.url
-                } : undefined,
-                permissions: user.role === 'staff' ? user.permissions : undefined,
-                needsPasswordChange: user.role === 'staff' ? user.metadata?.needsPasswordChange || false : undefined
-            }
-        };
-
-        // Add school info for non-super_admin
-        if (user.role !== 'super_admin' && user.schoolId) {
-            response.user.school = {
+        // Build user response with populated school data
+        const userResponse = {
+            id: user._id,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            email: user.email,
+            username: user.username,
+            role: user.role,
+            initials: user.initials,
+            avatar: user.avatar?.url || '',
+            isActive: user.isActive,
+            // School data (now populated)
+            schoolId: user.schoolId ? {
                 id: user.schoolId._id,
                 name: user.schoolId.name,
-                logo: user.schoolId.logo?.url
-            };
+                logo: user.schoolId.logo?.url || null
+            } : null,
+            permissions: user.role === 'staff' ? user.permissions : undefined,
+            // ✅ Add first login flag for frontend
+            needsPasswordChange: user.role === 'staff' ? (user.metadata?.needsPasswordChange || false) : false
+        };
 
-            // Add subscription status for admin
-            if (user.role === 'admin') {
-                response.user.subscription = {
-                    status: user.subscription.status,
-                    trialEndsAt: user.subscription.trialEndsAt,
-                    isActive: user.isSubscriptionActive,
-                    daysRemaining: user.subscription.trialEndsAt ?
-                        Math.ceil((user.subscription.trialEndsAt - new Date()) / (1000 * 60 * 60 * 24)) : null
-                };
-            }
+        // Add subscription for admin users
+        if (user.role === 'admin' && user.subscription) {
+            userResponse.subscription = {
+                status: user.subscription.status || 'trial',
+                trialEndsAt: user.subscription.trialEndsAt,
+                isActive: user.isSubscriptionActive,
+                daysRemaining: user.subscription.trialEndsAt ?
+                    Math.ceil((new Date(user.subscription.trialEndsAt) - new Date()) / (1000 * 60 * 60 * 24)) : null
+            };
         }
 
-        res.json(response);
+        // Send response
+        res.json({
+            success: true,
+            message: isFirstLogin ? 'First login! Please change your password.' : 'Login successful',
+            token,
+            redirectTo,
+            user: userResponse,
+            // ✅ Extra flag for frontend to show password change modal
+            requiresPasswordChange: isFirstLogin
+        });
 
     } catch (error) {
         console.error('Login error:', error);
@@ -931,54 +926,53 @@ router.put('/profile', authMiddleware, async (req, res) => {
     }
 });
 
-// Change Password (keep your existing - it's good!)
-router.put('/change-password', authMiddleware, async (req, res) => {
-    // Your existing code - it's solid!
+// routes/auth.js - Change Password Route
+router.post('/change-password', authMiddleware, async (req, res) => {
     try {
-        const { currentPassword, newPassword } = req.body;
+        const { currentPassword, newPassword, isFirstLogin } = req.body;
+        const user = await User.findById(req.userId).select('+password');
 
-        if (!currentPassword || !newPassword) {
-            return res.status(400).json({
-                success: false,
-                error: 'Current password and new password are required'
+        // Handle first login (no current password required)
+        if (isFirstLogin && user.metadata?.needsPasswordChange === true) {
+            // Hash new password
+            const salt = await bcrypt.genSalt(10);
+            user.password = await bcrypt.hash(newPassword, salt);
+            
+            // Clear the needsPasswordChange flag
+            user.metadata.needsPasswordChange = false;
+            await user.save();
+
+            return res.json({
+                success: true,
+                message: 'Password set successfully'
             });
         }
 
-        if (newPassword.length < 6) {
-            return res.status(400).json({
-                success: false,
-                error: 'New password must be at least 6 characters long'
-            });
-        }
-
-        const user = await User.findById(req.user.id).select('+password');
-        if (!user) {
-            return res.status(404).json({
-                success: false,
-                error: 'User not found'
-            });
-        }
-
+        // Normal password change (requires current password)
         const isMatch = await bcrypt.compare(currentPassword, user.password);
         if (!isMatch) {
-            return res.status(400).json({
+            return res.status(401).json({
                 success: false,
                 error: 'Current password is incorrect'
             });
         }
 
-        user.password = await bcrypt.hash(newPassword, 10);
-        user.metadata.needsPasswordChange = false; // Reset the flag if it was set
+        // Hash new password
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(newPassword, salt);
+        
         await user.save();
 
         res.json({
             success: true,
             message: 'Password changed successfully'
         });
-
     } catch (error) {
         console.error('Change password error:', error);
-        res.status(500).json({ success: false, error: error.message });
+        res.status(500).json({
+            success: false,
+            error: 'Failed to change password'
+        });
     }
 });
 
@@ -1048,7 +1042,7 @@ router.get('/school/:schoolId',
 );
 
 
-// REQUEST password reset (user enters email)
+// REQUEST password reset (user enters emails)
 router.post('/forgot-password', async (req, res) => {
     try {
         const { email } = req.body;

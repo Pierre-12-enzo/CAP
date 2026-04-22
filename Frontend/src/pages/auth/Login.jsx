@@ -24,7 +24,7 @@ const Login = () => {
   // Validation rules
   const validateField = (name, value) => {
     let error = '';
-    
+
     switch (name) {
       case 'email':
         if (!value.trim()) {
@@ -35,7 +35,7 @@ const Login = () => {
           error = 'Email must be less than 100 characters';
         }
         break;
-        
+
       case 'password':
         if (!value.trim()) {
           error = 'Password is required';
@@ -45,25 +45,25 @@ const Login = () => {
           error = 'Password must be less than 50 characters';
         }
         break;
-        
+
       default:
         break;
     }
-    
+
     return error;
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    
+
     setFormData(prev => ({
       ...prev,
       [name]: value
     }));
-    
+
     // Clear global error when user starts typing
     if (error) setError('');
-    
+
     // Real-time validation if field has been touched
     if (touched[name]) {
       const fieldError = validateField(name, value);
@@ -76,12 +76,12 @@ const Login = () => {
 
   const handleBlur = (e) => {
     const { name, value } = e.target;
-    
+
     setTouched(prev => ({
       ...prev,
       [name]: true
     }));
-    
+
     const fieldError = validateField(name, value);
     setFormErrors(prev => ({
       ...prev,
@@ -92,7 +92,7 @@ const Login = () => {
   const validateForm = () => {
     const errors = {};
     let isValid = true;
-    
+
     Object.keys(formData).forEach(key => {
       const error = validateField(key, formData[key]);
       if (error) {
@@ -100,9 +100,9 @@ const Login = () => {
         isValid = false;
       }
     });
-    
+
     setFormErrors(errors);
-    
+
     // Mark all fields as touched to show errors
     if (!isValid) {
       setTouched({
@@ -110,29 +110,41 @@ const Login = () => {
         password: true
       });
     }
-    
+
     return isValid;
   };
 
+  // components/auth/Login.jsx - Updated handleSubmit
   const handleSubmit = async (e) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     // Clear previous errors
     setError('');
-    
+
     // Validate form
     if (!validateForm()) {
       return;
     }
-    
+
     setLoading(true);
-    
+
     try {
       const result = await login(formData.email, formData.password);
-      
+
+      console.log('📝 Login result:', result); // Debug log
+
       if (result.success) {
-        navigate('/dashboard');
+        // ✅ Use the redirectTo from the response
+        const redirectPath = result.redirectTo || '/dashboard';
+        console.log('🚀 Redirecting to:', redirectPath);
+
+        // For staff who need password change, redirect to settings
+        if (result.needsPasswordChange) {
+          navigate('/staff/settings');
+        } else {
+          navigate(redirectPath);
+        }
       } else {
         setError(result.error || 'Invalid credentials');
       }
@@ -146,8 +158,8 @@ const Login = () => {
 
   // Check if form is valid for submit button
   const isFormValid = () => {
-    return formData.email && formData.password && 
-           !formErrors.email && !formErrors.password;
+    return formData.email && formData.password &&
+      !formErrors.email && !formErrors.password;
   };
 
   // Auto-remove error after 5 seconds
@@ -186,8 +198,8 @@ const Login = () => {
           </div>
 
           {/* Login Form */}
-          <form 
-            className="space-y-6" 
+          <form
+            className="space-y-6"
             onSubmit={handleSubmit}
             noValidate
           >
@@ -206,7 +218,7 @@ const Login = () => {
                 </div>
               </div>
             )}
-            
+
             {/* Email Field */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
@@ -222,11 +234,10 @@ const Login = () => {
                   value={formData.email}
                   onChange={handleChange}
                   onBlur={handleBlur}
-                  className={`block w-full px-4 py-3 bg-white border rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 transition-all duration-300 pr-10 ${
-                    formErrors.email && touched.email
-                      ? 'border-red-300 focus:ring-red-500 focus:border-red-500' 
+                  className={`block w-full px-4 py-3 bg-white border rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 transition-all duration-300 pr-10 ${formErrors.email && touched.email
+                      ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
                       : 'border-gray-300 focus:ring-emerald-500 focus:border-emerald-500'
-                  }`}
+                    }`}
                   placeholder="Enter your email"
                   autoComplete="email"
                 />
@@ -268,11 +279,10 @@ const Login = () => {
                   value={formData.password}
                   onChange={handleChange}
                   onBlur={handleBlur}
-                  className={`block w-full px-4 py-3 bg-white border rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 transition-all duration-300 pr-10 ${
-                    formErrors.password && touched.password
-                      ? 'border-red-300 focus:ring-red-500 focus:border-red-500' 
+                  className={`block w-full px-4 py-3 bg-white border rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 transition-all duration-300 pr-10 ${formErrors.password && touched.password
+                      ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
                       : 'border-gray-300 focus:ring-emerald-500 focus:border-emerald-500'
-                  }`}
+                    }`}
                   placeholder="Enter your password"
                   autoComplete="current-password"
                 />
@@ -321,11 +331,10 @@ const Login = () => {
             <button
               type="submit"
               disabled={loading || !isFormValid()}
-              className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transform transition-all duration-300 relative overflow-hidden group ${
-                loading || !isFormValid() 
-                  ? 'opacity-50 cursor-not-allowed' 
+              className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transform transition-all duration-300 relative overflow-hidden group ${loading || !isFormValid()
+                  ? 'opacity-50 cursor-not-allowed'
                   : 'hover:scale-105'
-              }`}
+                }`}
             >
               <span className="relative z-10">
                 {loading ? (
@@ -371,14 +380,14 @@ const Login = () => {
         <div className="absolute inset-0">
           {/* Floating Green Dots */}
           <div className="absolute top-1/4 left-1/4 w-3 h-3 bg-emerald-400 rounded-full opacity-60 animate-float"></div>
-          <div className="absolute top-1/3 right-1/3 w-2 h-2 bg-green-500 rounded-full opacity-40 animate-float" style={{animationDelay: '1s'}}></div>
-          <div className="absolute bottom-1/4 left-1/3 w-4 h-4 bg-emerald-300 rounded-full opacity-50 animate-float" style={{animationDelay: '2s'}}></div>
-          <div className="absolute top-1/2 right-1/4 w-3 h-3 bg-green-400 rounded-full opacity-60 animate-float" style={{animationDelay: '3s'}}></div>
-          
+          <div className="absolute top-1/3 right-1/3 w-2 h-2 bg-green-500 rounded-full opacity-40 animate-float" style={{ animationDelay: '1s' }}></div>
+          <div className="absolute bottom-1/4 left-1/3 w-4 h-4 bg-emerald-300 rounded-full opacity-50 animate-float" style={{ animationDelay: '2s' }}></div>
+          <div className="absolute top-1/2 right-1/4 w-3 h-3 bg-green-400 rounded-full opacity-60 animate-float" style={{ animationDelay: '3s' }}></div>
+
           {/* Smoke/Light Effect */}
           <div className="absolute -top-24 -right-24 w-96 h-96 bg-gradient-to-br from-emerald-200 to-transparent rounded-full opacity-30 animate-pulse"></div>
-          <div className="absolute -bottom-32 -left-32 w-80 h-80 bg-gradient-to-tr from-green-200 to-transparent rounded-full opacity-20 animate-pulse" style={{animationDelay: '2s'}}></div>
-          
+          <div className="absolute -bottom-32 -left-32 w-80 h-80 bg-gradient-to-tr from-green-200 to-transparent rounded-full opacity-20 animate-pulse" style={{ animationDelay: '2s' }}></div>
+
           {/* Grid Pattern */}
           <div className="absolute inset-0 opacity-10">
             <div className="grid grid-cols-12 gap-4 h-full">
@@ -396,22 +405,22 @@ const Login = () => {
               {/* Animated Card Stack */}
               <div className="relative mx-auto mb-6 w-32 h-40">
                 <div className="absolute inset-0 bg-gradient-to-br from-emerald-500 to-green-600 rounded-2xl shadow-2xl transform rotate-3 animate-float"></div>
-                <div className="absolute inset-0 bg-gradient-to-br from-emerald-400 to-green-500 rounded-2xl shadow-xl transform -rotate-2 translate-y-1 animate-float" style={{animationDelay: '1s'}}></div>
-                <div className="absolute inset-0 bg-gradient-to-br from-emerald-600 to-green-700 rounded-2xl shadow-lg transform rotate-6 translate-y-2 animate-float" style={{animationDelay: '2s'}}></div>
+                <div className="absolute inset-0 bg-gradient-to-br from-emerald-400 to-green-500 rounded-2xl shadow-xl transform -rotate-2 translate-y-1 animate-float" style={{ animationDelay: '1s' }}></div>
+                <div className="absolute inset-0 bg-gradient-to-br from-emerald-600 to-green-700 rounded-2xl shadow-lg transform rotate-6 translate-y-2 animate-float" style={{ animationDelay: '2s' }}></div>
                 <div className="w-32 h-32 mx-auto mb-6 mt-6  bg-gradient-to-br from-emerald-400 to-green-500 rounded-2xl flex items-center justify-center shadow-2xl transform rotate-6">
-                <span className="text-white text-4xl font-bold">ID</span>
-              </div>
+                  <span className="text-white text-4xl font-bold">ID</span>
+                </div>
               </div>
 
               <h3 className="text-2xl font-bold text-gray-800 mb-4">
                 Smart Card Management
               </h3>
               <p className="text-gray-600 text-lg leading-relaxed">
-                Generate, track, and manage student ID cards with our futuristic automation system. 
+                Generate, track, and manage student ID cards with our futuristic automation system.
                 Perfect for educational institutions of all sizes.
               </p>
             </div>
-            
+
             {/* Feature List */}
             <div className="space-y-4 text-left bg-white/50 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
               <div className="flex items-center text-gray-700 group">
@@ -425,7 +434,7 @@ const Login = () => {
                   <div className="text-sm text-gray-600">Generate 500+ cards in minutes</div>
                 </div>
               </div>
-              
+
               <div className="flex items-center text-gray-700 group">
                 <div className="w-8 h-8 bg-emerald-600 rounded-full flex items-center justify-center mr-3 group-hover:scale-110 transition-transform duration-300">
                   <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -437,7 +446,7 @@ const Login = () => {
                   <div className="text-sm text-gray-600">Drag & drop visual designer</div>
                 </div>
               </div>
-              
+
               <div className="flex items-center text-gray-700 group">
                 <div className="w-8 h-8 bg-emerald-600 rounded-full flex items-center justify-center mr-3 group-hover:scale-110 transition-transform duration-300">
                   <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">

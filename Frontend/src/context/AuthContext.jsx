@@ -95,12 +95,15 @@ export const AuthProvider = ({ children }) => {
     initAuth();
   }, []);
 
+  // context/AuthContext.jsx - UPDATED login function
   const login = async (email, password) => {
     try {
       setLoading(true);
 
-      // authAPI.login now returns the data object (doesn't throw)
+      // authAPI.login returns the data object
       const data = await authAPI.login(email, password);
+
+      console.log('🔐 Login response:', data); // Debug log
 
       // Check if login was successful
       if (data.success && data.token) {
@@ -113,11 +116,19 @@ export const AuthProvider = ({ children }) => {
           };
         }
 
-        // Set user data
+        // ✅ IMPORTANT: Set user data immediately
         if (data.user) {
           setUser(data.user);
-          return { success: true, error: null };
+          console.log('✅ User set in context:', data.user); // Debug log
         }
+
+        // ✅ Return the redirectTo and user data to the component
+        return {
+          success: true,
+          redirectTo: data.redirectTo || '/dashboard',
+          user: data.user,
+          needsPasswordChange: data.user?.needsPasswordChange || false
+        };
       }
 
       // If login failed, return the error

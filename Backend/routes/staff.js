@@ -569,7 +569,7 @@ router.delete('/:id',
                 });
 
                 await AuditLog.create({
-                    action: 'DELETE_STAFF_PERMANENT',
+                    action: 'DELETE_STAFF',
                     userId: req.user._id,
                     schoolId: staff.schoolId._id,
                     details: {
@@ -740,7 +740,7 @@ router.post('/bulk',
 
             for (const staffData of staffList) {
                 try {
-                    const { firstName, lastName, email, permissions } = staffData;
+                    const { firstName, lastName, email, permissions, phoneNumber } = staffData;
 
                     // Check if exists
                     const existing = await User.findOne({ email: email.toLowerCase() });
@@ -762,6 +762,7 @@ router.post('/bulk',
                         firstName,
                         lastName,
                         username,
+                        phoneNumber,
                         email: email.toLowerCase(),
                         password: await bcrypt.hash(tempPassword, 10),
                         role: 'staff',
