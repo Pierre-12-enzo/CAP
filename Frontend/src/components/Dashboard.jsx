@@ -1,5 +1,5 @@
-// components/Dashboard.jsx - FIXED WITH PROPER RELATIVE ROUTING
-import React, { useState, useEffect } from 'react';
+// components/Dashboard.jsx - FULLY RESPONSIVE WITH MOBILE SIDEBAR
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
 
@@ -47,7 +47,46 @@ const ThemeToggle = () => {
 const Dashboard = () => {
   const { user, logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const location = useLocation();
+  const sidebarRef = useRef(null);
+
+  // Check if mobile on mount and resize
+  useEffect(() => {
+    const checkMobile = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      if (mobile) {
+        setSidebarOpen(false);
+      } else {
+        setSidebarOpen(true);
+      }
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Close mobile sidebar when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (isMobile && mobileSidebarOpen && sidebarRef.current && !sidebarRef.current.contains(event.target)) {
+        setMobileSidebarOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isMobile, mobileSidebarOpen]);
+
+  // Close mobile sidebar on route change
+  useEffect(() => {
+    if (isMobile) {
+      setMobileSidebarOpen(false);
+    }
+  }, [location.pathname, isMobile]);
 
   // Get the base path based on user role
   const getBasePath = () => {
@@ -167,175 +206,214 @@ const Dashboard = () => {
     return subtitles[location.pathname] || 'Manage your operations';
   };
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex">
-      {/* Fixed Sidebar */}
-      <div className={`${sidebarOpen ? 'w-64' : 'w-16'} bg-white/95 backdrop-blur-xl shadow-2xl border-r border-emerald-200/30 transition-all duration-500 ease-in-out flex flex-col fixed h-screen z-50`}>
-        {/* Logo Section */}
-        <div className="relative z-10 p-4 border-b border-emerald-200/30 flex-shrink-0">
-          <div className="flex items-center space-x-3">
-            <div className="relative">
-              <div className="w-10 h-10 bg-gradient-to-br from-emerald-600 to-green-800 rounded-xl flex items-center justify-center shadow-xl shadow-emerald-500/30 transform hover:rotate-12 transition-transform duration-500">
-                <i className="pi pi-id-card text-white text-sm"></i>
-              </div>
-              <div className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-400 rounded-full border-2 border-white animate-pulse"></div>
+  const sidebarContent = (
+    <>
+      {/* Logo Section */}
+      <div className="relative z-10 p-4 border-b border-emerald-200/30 flex-shrink-0">
+        <div className="flex items-center space-x-3">
+          <div className="relative">
+            <div className="w-10 h-10 bg-gradient-to-br from-emerald-600 to-green-800 rounded-xl flex items-center justify-center shadow-xl shadow-emerald-500/30 transform hover:rotate-12 transition-transform duration-500">
+              <i className="pi pi-id-card text-white text-sm"></i>
             </div>
-            {sidebarOpen && (
-              <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-emerald-700 to-green-800 bg-clip-text text-transparent">
-                  CAP_mis
-                </h1>
-                <p className="text-sm text-emerald-600/80 capitalize">{user?.role} Panel</p>
-              </div>
-            )}
+            <div className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-400 rounded-full border-2 border-white animate-pulse"></div>
           </div>
-        </div>
-
-        {/* Navigation */}
-        <div className="flex-1 px-3 py-4 space-y-2 overflow-y-auto">
-          {navItems.map((item) => (
-            <NavLinkItem
-              key={item.path}
-              icon={item.icon}
-              label={item.label}
-              to={item.path}
-              active={isActiveRoute(item.path)}
-              sidebarOpen={sidebarOpen}
-            />
-          ))}
-        </div>
-
-        {/* User Section */}
-        <div className="p-4 border-t border-emerald-200/30 flex-shrink-0 space-y-3">
-          {sidebarOpen ? (
-            <div className="space-y-3">
-              <div className="flex items-center space-x-2 p-2 bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl border border-emerald-200/50">
-                <div className="w-8 h-8 bg-gradient-to-br from-emerald-600 to-green-700 rounded-xl flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">
-                    {user?.firstName?.charAt(0)}{user?.lastName?.charAt(0)}
-                  </span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-gray-900 truncate">
-                    {user?.firstName} {user?.lastName}
-                  </p>
-                  <p className="text-xs text-emerald-600 capitalize truncate">
-                    {user?.role}
-                  </p>
-                </div>
-              </div>
-
-              <button
-                onClick={logout}
-                className="w-full flex items-center justify-center space-x-2 px-2 py-2 text-sm text-gray-700 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors"
-              >
-                <i className="pi pi-sign-out text-base"></i>
-                <span>Logout</span>
-              </button>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center space-y-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-emerald-600 to-green-700 rounded-xl flex items-center justify-center">
-                <span className="text-white font-bold text-sm">
-                  {user?.firstName?.charAt(0)}
-                </span>
-              </div>
-              <button
-                onClick={logout}
-                className="p-1.5 text-gray-700 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors"
-              >
-                <i className="pi pi-sign-out text-base"></i>
-              </button>
+          {(sidebarOpen || isMobile) && (
+            <div>
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-emerald-700 to-green-800 bg-clip-text text-transparent">
+                CAP_mis
+              </h1>
+              <p className="text-sm text-emerald-600/80 capitalize">{user?.role} Panel</p>
             </div>
           )}
         </div>
       </div>
 
+      {/* Navigation */}
+      <div className="flex-1 px-3 py-4 space-y-2 overflow-y-auto">
+        {navItems.map((item) => (
+          <NavLinkItem
+            key={item.path}
+            icon={item.icon}
+            label={item.label}
+            to={item.path}
+            active={isActiveRoute(item.path)}
+            sidebarOpen={sidebarOpen || isMobile}
+            onClick={() => isMobile && setMobileSidebarOpen(false)}
+          />
+        ))}
+      </div>
+
+      {/* User Section */}
+      <div className="p-4 border-t border-emerald-200/30 flex-shrink-0 space-y-3">
+        {(sidebarOpen || isMobile) ? (
+          <div className="space-y-3">
+            <div className="flex items-center space-x-2 p-2 bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl border border-emerald-200/50">
+              <div className="w-8 h-8 bg-gradient-to-br from-emerald-600 to-green-700 rounded-xl flex items-center justify-center">
+                <span className="text-white font-bold text-sm">
+                  {user?.firstName?.charAt(0)}{user?.lastName?.charAt(0)}
+                </span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-gray-900 truncate">
+                  {user?.firstName} {user?.lastName}
+                </p>
+                <p className="text-xs text-emerald-600 capitalize truncate">
+                  {user?.role}
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={logout}
+              className="w-full flex items-center justify-center space-x-2 px-2 py-2 text-sm text-gray-700 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors"
+            >
+              <i className="pi pi-sign-out text-base"></i>
+              <span>Logout</span>
+            </button>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center space-y-2">
+            <div className="w-8 h-8 bg-gradient-to-br from-emerald-600 to-green-700 rounded-xl flex items-center justify-center">
+              <span className="text-white font-bold text-sm">
+                {user?.firstName?.charAt(0)}
+              </span>
+            </div>
+            <button
+              onClick={logout}
+              className="p-1.5 text-gray-700 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors"
+            >
+              <i className="pi pi-sign-out text-base"></i>
+            </button>
+          </div>
+        )}
+      </div>
+    </>
+  );
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex">
+      {/* Mobile Menu Overlay */}
+      {isMobile && mobileSidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
+          onClick={() => setMobileSidebarOpen(false)}
+        />
+      )}
+
+      {/* Sidebar - Desktop */}
+      {!isMobile && (
+        <div className={`${sidebarOpen ? 'w-64' : 'w-16'} bg-white/95 backdrop-blur-xl shadow-2xl border-r border-emerald-200/30 transition-all duration-500 ease-in-out flex flex-col fixed h-screen z-50`}>
+          {sidebarContent}
+        </div>
+      )}
+
+      {/* Sidebar - Mobile (Slide-out) */}
+      {isMobile && (
+        <div
+          ref={sidebarRef}
+          className={`fixed top-0 left-0 h-screen w-72 bg-white/95 backdrop-blur-xl shadow-2xl border-r border-emerald-200/30 transition-transform duration-300 ease-in-out flex flex-col z-50 ${mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+            }`}
+        >
+          {sidebarContent}
+        </div>
+      )}
+
       {/* Main Content Area */}
-      <div className={`flex-1 flex flex-col min-w-0 transition-all duration-500 ${sidebarOpen ? 'ml-64' : 'ml-16'}`}>
+      <div className={`flex-1 flex flex-col min-w-0 transition-all duration-500 ${isMobile ? 'ml-0' : (sidebarOpen ? 'ml-64' : 'ml-16')
+        }`}>
         {/* Header */}
-        <header className="bg-white/80 backdrop-blur-xl shadow-sm border-b border-emerald-200/30 sticky top-0 z-40">
-          <div className="flex items-center justify-between px-6 py-4">
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="p-2 rounded-xl hover:bg-emerald-50 transition-colors"
-              >
-                <i className={`pi ${sidebarOpen ? 'pi-bars' : 'pi-arrow-right'} text-emerald-700 text-base`}></i>
-              </button>
-              <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-emerald-700 to-green-800 bg-clip-text text-transparent">
+        <header className="bg-white/80 backdrop-blur-xl shadow-sm border-b border-emerald-200/30 sticky top-0 z-30">
+          <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4">
+            <div className="flex items-center space-x-2 sm:space-x-4">
+              {/* Mobile menu button */}
+              {isMobile && (
+                <button
+                  onClick={() => setMobileSidebarOpen(true)}
+                  className="p-2 rounded-xl hover:bg-emerald-50 transition-colors"
+                >
+                  <i className="pi pi-bars text-emerald-700 text-base"></i>
+                </button>
+              )}
+
+              {/* Desktop sidebar toggle */}
+              {!isMobile && (
+                <button
+                  onClick={() => setSidebarOpen(!sidebarOpen)}
+                  className="p-2 rounded-xl hover:bg-emerald-50 transition-colors"
+                >
+                  <i className={`pi ${sidebarOpen ? 'pi-bars' : 'pi-arrow-right'} text-emerald-700 text-base`}></i>
+                </button>
+              )}
+
+              <div className="min-w-0">
+                <h1 className="text-lg sm:text-xl md:text-2xl font-bold bg-gradient-to-r from-emerald-700 to-green-800 bg-clip-text text-transparent truncate">
                   {getPageTitle()}
                 </h1>
-                <p className="text-sm text-emerald-600/80 mt-1">
+                <p className="text-xs sm:text-sm text-emerald-600/80 mt-0.5 sm:mt-1 truncate">
                   {getPageSubtitle()}
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
               <ThemeToggle />
               <div className="flex items-center space-x-2">
-                <div className="text-right">
-                  <p className="text-base font-semibold text-gray-900">Hi, {user?.firstName}!</p>
-                  <p className="text-sm text-emerald-600">
+                <div className="hidden sm:block text-right">
+                  <p className="text-sm sm:text-base font-semibold text-gray-900 truncate">Hi, {user?.firstName}!</p>
+                  <p className="text-xs sm:text-sm text-emerald-600">
                     {new Date().toLocaleDateString('en-US', {
                       month: 'short',
                       day: 'numeric'
                     })}
                   </p>
                 </div>
-                <div className="w-8 h-8 bg-gradient-to-br from-emerald-600 to-green-700 rounded-xl flex items-center justify-center">
-                  <i className="pi pi-verified text-white text-sm"></i>
+                <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-br from-emerald-600 to-green-700 rounded-xl flex items-center justify-center">
+                  <i className="pi pi-verified text-white text-xs sm:text-sm"></i>
                 </div>
               </div>
             </div>
           </div>
         </header>
 
-        {/* Main Content */}
-        <main className="flex-1 overflow-auto p-4">
-          <div className="w-full">
-            <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-xl border border-emerald-200/30 overflow-hidden">
-              {/* ✅ FIXED: Use relative paths for each role */}
-              {user?.role === 'admin' && (
-                <Routes>
-                  <Route path="/" element={<Overview />} />
-                  <Route path="/card-studio" element={<CardStudio />} />
-                  <Route path="/permissions" element={<PermissionStudio />} />
-                  <Route path="/students" element={<StudentManagement />} />
-                  <Route path="/staff" element={<StaffManagement />} />
-                  <Route path="/subscription" element={<SubscriptionManagement />} />
-                  <Route path="/templates" element={<TemplateManager />} />
-                  <Route path="/settings" element={<Profile />} />
-                  <Route path="/documentation" element={<Documentation />} />
-                </Routes>
-              )}
+        {/* Main Content - Removed extra padding */}
+        <main className="flex-1 overflow-auto">
+          {/* Removed wrapper divs that add extra padding */}
+          {user?.role === 'admin' && (
+            <Routes>
+              <Route path="/" element={<Overview />} />
+              <Route path="/card-studio" element={<CardStudio />} />
+              <Route path="/permissions" element={<PermissionStudio />} />
+              <Route path="/students" element={<StudentManagement />} />
+              <Route path="/staff" element={<StaffManagement />} />
+              <Route path="/subscription" element={<SubscriptionManagement />} />
+              <Route path="/templates" element={<TemplateManager />} />
+              <Route path="/settings" element={<Profile />} />
+              <Route path="/documentation" element={<Documentation />} />
+            </Routes>
+          )}
 
-              {user?.role === 'super_admin' && (
-                <Routes>
-                  <Route path="/" element={<SuperAdminOverview />} />
-                  <Route path="/plans" element={<PlansManager />} />
-                  <Route path="/subscriptions" element={<SubscriptionsReports />} />
-                  <Route path="/schools" element={<SchoolsManager />} />
-                  <Route path="/settings" element={<SuperAdminSettings />} />
-                  <Route path="/documentation" element={<Documentation />} />
-                </Routes>
-              )}
+          {user?.role === 'super_admin' && (
+            <Routes>
+              <Route path="/" element={<SuperAdminOverview />} />
+              <Route path="/plans" element={<PlansManager />} />
+              <Route path="/subscriptions" element={<SubscriptionsReports />} />
+              <Route path="/schools" element={<SchoolsManager />} />
+              <Route path="/settings" element={<SuperAdminSettings />} />
+              <Route path="/documentation" element={<Documentation />} />
+            </Routes>
+          )}
 
-              {user?.role === 'staff' && (
-                <Routes>
-                  <Route path="/" element={<StaffOverview />} />
-                  <Route path="/card-studio" element={<StaffCardStudio />} />
-                  <Route path="/attendance" element={<StaffAttendance />} />
-                  <Route path="/students" element={<StaffStudents />} />
-                  <Route path="/permissions" element={<StaffPermissions />} />
-                  <Route path="/settings" element={<StaffProfile />} />
-                  <Route path="/documentation" element={<Documentation />} />
-                </Routes>
-              )}
-            </div>
-          </div>
+          {user?.role === 'staff' && (
+            <Routes>
+              <Route path="/" element={<StaffOverview />} />
+              <Route path="/card-studio" element={<StaffCardStudio />} />
+              <Route path="/attendance" element={<StaffAttendance />} />
+              <Route path="/students" element={<StaffStudents />} />
+              <Route path="/permissions" element={<StaffPermissions />} />
+              <Route path="/settings" element={<StaffProfile />} />
+              <Route path="/documentation" element={<Documentation />} />
+            </Routes>
+          )}
         </main>
       </div>
     </div>
@@ -343,9 +421,10 @@ const Dashboard = () => {
 };
 
 // Nav Link Item Component
-const NavLinkItem = ({ icon, label, to, active, sidebarOpen }) => (
+const NavLinkItem = ({ icon, label, to, active, sidebarOpen, onClick }) => (
   <Link
     to={to}
+    onClick={onClick}
     className={`w-full flex items-center space-x-3 p-3 rounded-xl transition-colors relative ${active
       ? 'bg-gradient-to-r from-emerald-600/10 to-green-700/10 text-emerald-700 border border-emerald-300/50'
       : 'text-gray-700 hover:bg-emerald-50/80 hover:text-emerald-600 border border-transparent'
