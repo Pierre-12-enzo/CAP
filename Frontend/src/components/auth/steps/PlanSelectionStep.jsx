@@ -1,4 +1,4 @@
-// components/auth/steps/PlanSelectionStep.jsx - EMERALD THEME WITH PRIMEICONS
+// components/auth/steps/PlanSelectionStep.jsx - FUTURISTIC REDESIGN
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { authAPI } from '../../../services/api';
@@ -9,6 +9,7 @@ const PlanSelectionStep = ({ onSubmit, initialData, loading }) => {
   const [billingCycle, setBillingCycle] = useState(initialData?.billingCycle || 'monthly');
   const [loadingPlans, setLoadingPlans] = useState(true);
   const [error, setError] = useState('');
+  const [hoveredPlan, setHoveredPlan] = useState(null);
 
   useEffect(() => {
     fetchPlans();
@@ -56,14 +57,26 @@ const PlanSelectionStep = ({ onSubmit, initialData, loading }) => {
     }).format(price);
   };
 
+  const calculateSavings = (monthly, yearly) => {
+    const monthlyTotal = monthly * 12;
+    const savings = monthlyTotal - yearly;
+    return Math.round((savings / monthlyTotal) * 100);
+  };
+
   if (loadingPlans) {
     return (
       <div className="space-y-6">
-        <h2 className="text-xl font-bold text-gray-900">Choose Your Plan</h2>
+        <div className="relative mb-6">
+          <div className="absolute -left-4 top-0 w-1 h-12 bg-gradient-to-b from-emerald-400 to-green-500 rounded-full"></div>
+          <h2 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+            Choose Your Plan
+          </h2>
+          <p className="text-sm text-gray-500 mt-1">Select the perfect plan for your school</p>
+        </div>
         <div className="grid grid-cols-3 gap-4">
           {[1, 2, 3].map(i => (
             <div key={i} className="animate-pulse">
-              <div className="h-56 bg-gray-100 rounded-2xl"></div>
+              <div className="h-72 bg-gradient-to-br from-gray-100 to-gray-200 rounded-3xl"></div>
             </div>
           ))}
         </div>
@@ -73,155 +86,286 @@ const PlanSelectionStep = ({ onSubmit, initialData, loading }) => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div>
-        <h2 className="text-xl font-bold text-gray-900 mb-1">Choose Your Plan</h2>
-        <p className="text-sm text-gray-600">Select the plan that best fits your school's needs</p>
+      {/* Header */}
+      <div className="relative mb-6">
+        <div className="absolute -left-4 top-0 w-1 h-12 bg-gradient-to-b from-emerald-400 to-green-500 rounded-full"></div>
+        <h2 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+          Choose Your Plan
+        </h2>
+        <p className="text-sm text-gray-500 mt-1">Select the perfect plan for your school's needs</p>
       </div>
 
-      {/* Billing toggle */}
+      {/* Billing Toggle - Glass Morphism */}
       {plans.some(p => p.type === 'paid') && (
-        <div className="flex justify-center">
-          <div className="bg-gray-100 p-1 rounded-xl inline-flex">
-            <button
-              type="button"
-              onClick={() => setBillingCycle('monthly')}
-              className={`px-5 py-1.5 rounded-lg text-sm font-medium transition-all ${billingCycle === 'monthly' ? 'bg-white text-emerald-700 shadow' : 'text-gray-600'
-                }`}
-            >
-              Monthly
-            </button>
-            <button
-              type="button"
-              onClick={() => setBillingCycle('yearly')}
-              className={`px-5 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center ${billingCycle === 'yearly' ? 'bg-white text-emerald-700 shadow' : 'text-gray-600'
-                }`}
-            >
-              Yearly
-              <span className="ml-2 text-xs bg-green-500 text-white px-1.5 py-0.5 rounded-full">-20%</span>
-            </button>
+        <motion.div
+          className="flex justify-center"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+        >
+          <div className="relative p-1.5 bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-200">
+            {/* Animated Background Indicator */}
+            <motion.div
+              className="absolute top-1.5 bottom-1.5 w-[calc(50%-0.375rem)] bg-gradient-to-r from-emerald-400 to-green-500 rounded-xl shadow-lg"
+              animate={{ x: billingCycle === 'monthly' ? 0 : '100%' }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            />
+
+            <div className="relative flex">
+              <button
+                type="button"
+                onClick={() => setBillingCycle('monthly')}
+                className={`relative z-10 px-8 py-2.5 text-sm font-semibold rounded-xl transition-all duration-300 ${billingCycle === 'monthly' ? 'text-white' : 'text-gray-600 hover:text-gray-900'
+                  }`}
+              >
+                Monthly
+              </button>
+              <button
+                type="button"
+                onClick={() => setBillingCycle('yearly')}
+                className={`relative z-10 px-8 py-2.5 text-sm font-semibold rounded-xl transition-all duration-300 flex items-center ${billingCycle === 'yearly' ? 'text-white' : 'text-gray-600 hover:text-gray-900'
+                  }`}
+              >
+                Yearly
+                <motion.span
+                  className="ml-2 px-2 py-0.5 bg-yellow-400 text-yellow-900 text-xs font-bold rounded-full"
+                  animate={{ scale: [1, 1.1, 1] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                >
+                  Save 20%
+                </motion.span>
+              </button>
+            </div>
           </div>
-        </div>
+        </motion.div>
       )}
 
-      {/* Plans grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        {plans.map((plan) => {
+      {/* Plans Grid - 3D Card Effect */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {plans.map((plan, index) => {
           const price = billingCycle === 'monthly' ? plan.price.monthly : plan.price.yearly;
+          const monthlyPrice = plan.price.monthly;
           const isSelected = selectedPlan === plan._id;
           const isTrial = plan.type === 'trial';
+          const savings = !isTrial && billingCycle === 'yearly'
+            ? calculateSavings(monthlyPrice, price)
+            : 0;
 
           return (
             <motion.div
               key={plan._id}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+              whileHover={{ y: -8, scale: 1.02 }}
+              onHoverStart={() => setHoveredPlan(plan._id)}
+              onHoverEnd={() => setHoveredPlan(null)}
               onClick={() => setSelectedPlan(plan._id)}
-              className={`relative cursor-pointer rounded-xl p-4 border-2 transition-all ${isSelected
-                  ? 'border-emerald-500 bg-emerald-50 shadow-lg'
-                  : 'border-gray-200 bg-white hover:border-emerald-200'
+              className={`relative cursor-pointer rounded-3xl p-6 transition-all duration-500 ${isSelected
+                  ? 'bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 border-2 border-emerald-400 shadow-2xl'
+                  : 'bg-white/80 backdrop-blur-sm border-2 border-gray-200 hover:border-emerald-200 shadow-lg hover:shadow-2xl'
                 }`}
             >
+              {/* Popular Badge */}
               {plan.isPopular && (
-                <div className="absolute -top-2 left-1/2 -translate-x-1/2">
-                  <span className="bg-gradient-to-r from-emerald-500 to-green-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">
-                    POPULAR
-                  </span>
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-20">
+                  <motion.div
+                    animate={{ y: [0, -3, 0] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                    className="relative"
+                  >
+                    <div className="px-4 py-1.5 bg-gradient-to-r from-amber-400 to-orange-500 text-white text-xs font-bold rounded-full shadow-lg">
+                      ⭐ MOST POPULAR
+                    </div>
+                  </motion.div>
                 </div>
               )}
 
+              {/* Trial Badge */}
               {isTrial && (
-                <div className="absolute -top-2 right-2">
-                  <span className="bg-green-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
-                    FREE TRIAL
-                  </span>
+                <div className="absolute -top-3 right-4 z-20">
+                  <motion.div
+                    animate={{ rotate: [0, 5, -5, 0] }}
+                    transition={{ duration: 3, repeat: Infinity }}
+                    className="px-3 py-1.5 bg-gradient-to-r from-green-400 to-emerald-500 text-white text-xs font-bold rounded-full shadow-lg"
+                  >
+                    🎁 FREE TRIAL
+                  </motion.div>
                 </div>
               )}
 
-              <div className="mb-3">
-                <i className={`text-2xl ${isTrial ? 'pi pi-gift text-green-600' : plan.code === 'BASIC' ? 'pi pi-rocket text-blue-600' : 'pi pi-crown text-amber-600'}`}></i>
-              </div>
+              {/* Plan Icon */}
+              <motion.div
+                className="mb-4"
+                animate={hoveredPlan === plan._id ? { rotate: [0, -5, 5, 0] } : {}}
+                transition={{ duration: 0.5 }}
+              >
+                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${isTrial
+                    ? 'bg-gradient-to-br from-green-400 to-emerald-500'
+                    : plan.code === 'BASIC'
+                      ? 'bg-gradient-to-br from-blue-400 to-cyan-500'
+                      : 'bg-gradient-to-br from-purple-400 to-pink-500'
+                  } shadow-lg`}>
+                  <span className="text-2xl">
+                    {isTrial ? '🎓' : plan.code === 'BASIC' ? '🚀' : '👑'}
+                  </span>
+                </div>
+              </motion.div>
 
-              <h3 className="text-base font-bold text-gray-900 mb-1">{plan.name}</h3>
+              {/* Plan Name */}
+              <h3 className="text-xl font-bold text-gray-900 mb-2">{plan.name}</h3>
 
-              <div className="mb-3">
+              {/* Price */}
+              <div className="mb-4">
                 {price === 0 ? (
-                  <span className="text-xl font-bold text-gray-900">Free</span>
+                  <div>
+                    <span className="text-3xl font-bold text-gray-900">Free</span>
+                    <p className="text-xs text-emerald-600 mt-1">{plan.trialDays}-day trial</p>
+                  </div>
                 ) : (
                   <>
-                    <span className="text-xl font-bold text-gray-900">{formatPrice(price)}</span>
-                    <span className="text-gray-500 text-xs ml-1">/{billingCycle === 'monthly' ? 'mo' : 'yr'}</span>
+                    <div className="flex items-baseline">
+                      <span className="text-3xl font-bold text-gray-900">{formatPrice(price)}</span>
+                      <span className="text-gray-500 text-sm ml-1">/{billingCycle === 'monthly' ? 'mo' : 'yr'}</span>
+                    </div>
+                    {billingCycle === 'yearly' && (
+                      <motion.p
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="text-xs text-green-600 mt-1 flex items-center"
+                      >
+                        <span className="mr-1">💰</span> Save {savings}% with yearly billing
+                      </motion.p>
+                    )}
+                    {billingCycle === 'monthly' && monthlyPrice > 0 && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        or {formatPrice(plan.price.yearly / 12)}/mo billed yearly
+                      </p>
+                    )}
                   </>
                 )}
-                {isTrial && <p className="text-xs text-emerald-600 mt-0.5">{plan.trialDays}-day trial</p>}
               </div>
 
-              <ul className="space-y-1.5 mb-4">
-                {plan.features?.slice(0, 4).map((feature, index) => (
-                  <li key={index} className="flex items-start text-xs">
-                    <i className={`pi ${feature.included ? 'pi-check-circle text-green-500' : 'pi-circle text-gray-300'} mr-1.5 text-xs mt-0.5`}></i>
-                    <span className={feature.included ? 'text-gray-700' : 'text-gray-400'}>{feature.name}</span>
-                  </li>
+              {/* Features List */}
+              <ul className="space-y-2 mb-6">
+                {plan.features?.map((feature, idx) => (
+                  <motion.li
+                    key={idx}
+                    className="flex items-start text-sm"
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.2 + idx * 0.05 }}
+                  >
+                    <div className={`w-5 h-5 rounded-full flex items-center justify-center mr-2 mt-0.5 ${feature.included
+                        ? 'bg-green-400'
+                        : 'bg-gray-300'
+                      }`}>
+                      {feature.included ? (
+                        <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                        </svg>
+                      ) : (
+                        <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      )}
+                    </div>
+                    <span className={feature.included ? 'text-gray-700' : 'text-gray-400 line-through'}>
+                      {feature.name}
+                    </span>
+                  </motion.li>
                 ))}
               </ul>
 
-              {isSelected && (
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  className="absolute top-2 right-2 w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center"
-                >
-                  <i className="pi pi-check text-white text-xs"></i>
-                </motion.div>
-              )}
+              {/* Selected Indicator */}
+              <AnimatePresence>
+                {isSelected && (
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    exit={{ scale: 0 }}
+                    className="absolute -bottom-3 left-1/2 -translate-x-1/2"
+                  >
+                    <div className="w-8 h-8 bg-gradient-to-r from-emerald-400 to-green-500 rounded-full flex items-center justify-center shadow-lg">
+                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Hover Glow Effect */}
+              <motion.div
+                className="absolute inset-0 rounded-3xl pointer-events-none"
+                animate={hoveredPlan === plan._id ? {
+                  boxShadow: "0 0 30px rgba(16, 185, 129, 0.3)"
+                } : {
+                  boxShadow: "0 0 0px rgba(16, 185, 129, 0)"
+                }}
+              />
             </motion.div>
           );
         })}
       </div>
 
+      {/* Error Message */}
       <AnimatePresence>
         {error && (
           <motion.div
-            initial={{ opacity: 0, y: -5 }}
+            initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -5 }}
-            className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm flex items-center"
+            exit={{ opacity: 0, y: -10 }}
+            className="p-4 bg-gradient-to-r from-red-50 to-red-100 border border-red-200 rounded-xl text-red-700 text-sm flex items-center"
           >
-            <i className="pi pi-exclamation-circle mr-2"></i>
+            <span className="mr-2">⚠️</span>
             {error}
           </motion.div>
         )}
       </AnimatePresence>
 
-      <div className="flex justify-between pt-4 border-t border-gray-200">
+      {/* Navigation Buttons */}
+      <div className="flex justify-between pt-6 border-t border-gray-200">
         <motion.button
-          whileHover={{ scale: 1.02 }}
+          whileHover={{ scale: 1.02, x: -2 }}
           whileTap={{ scale: 0.98 }}
           type="button"
           onClick={() => window.history.back()}
-          className="px-5 py-2.5 text-gray-700 font-medium rounded-xl hover:bg-gray-100 transition-colors flex items-center"
+          className="px-6 py-3 text-gray-600 font-medium rounded-xl hover:bg-gray-100 transition-all flex items-center group"
         >
-          <i className="pi pi-arrow-left mr-2"></i>
+          <svg className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
           Back
         </motion.button>
 
         <motion.button
-          whileHover={{ scale: 1.02 }}
+          whileHover={{ scale: 1.02, y: -2 }}
           whileTap={{ scale: 0.98 }}
           type="submit"
           disabled={loading || !selectedPlan}
-          className="px-6 py-2.5 bg-gradient-to-r from-emerald-500 to-green-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all disabled:opacity-50 flex items-center"
+          className="relative px-8 py-3 bg-gradient-to-r from-emerald-500 via-green-500 to-emerald-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all disabled:opacity-50 overflow-hidden group"
         >
-          {loading ? (
-            <>
-              <i className="pi pi-spinner pi-spin mr-2"></i>
-              Processing...
-            </>
-          ) : (
-            <>
-              Continue
-              <i className="pi pi-arrow-right ml-2"></i>
-            </>
-          )}
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+          <span className="relative z-10 flex items-center">
+            {loading ? (
+              <>
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                  className="w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2"
+                />
+                Processing...
+              </>
+            ) : (
+              <>
+                Continue to Payment
+                <svg className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              </>
+            )}
+          </span>
         </motion.button>
       </div>
     </form>

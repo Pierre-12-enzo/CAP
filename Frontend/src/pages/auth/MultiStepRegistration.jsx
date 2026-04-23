@@ -1,4 +1,4 @@
-// pages/auth/MultiStepRegistration.jsx - EMERALD THEME WITH PRIMEICONS
+// pages/auth/MultiStepRegistration.jsx - OPTIMIZED SPACING
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -95,7 +95,6 @@ const MultiStepRegistration = () => {
         try {
             let response;
 
-            // Using block scoping to fix ESLint error
             if (currentStep === 1) {
                 response = await authAPI.savePersonalInfo({
                     email: stepData.email,
@@ -231,26 +230,43 @@ const MultiStepRegistration = () => {
         return (
             <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50 flex items-center justify-center">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-16 w-16 border-4 border-emerald-200 border-t-emerald-600 mx-auto mb-4"></div>
-                    <p className="text-emerald-700 font-semibold">Checking for saved progress...</p>
+                    <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                        className="w-16 h-16 mx-auto mb-4"
+                    >
+                        <svg className="w-full h-full text-emerald-500" viewBox="0 0 50 50">
+                            <circle cx="25" cy="25" r="20" fill="none" stroke="currentColor" strokeWidth="4" strokeDasharray="80, 200" strokeDashoffset="0" />
+                        </svg>
+                    </motion.div>
+                    <p className="text-emerald-700 font-semibold">Loading your progress...</p>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen flex bg-white">
+        <div className="min-h-screen flex bg-gradient-to-br from-emerald-50 via-white to-green-50">
             {/* Left Side - Form Section */}
-            <div className="flex-1 flex flex-col justify-center py-8 px-4 sm:px-6 lg:px-16 xl:px-20 overflow-y-auto max-h-screen">
-                <div className="mx-auto w-full max-w-lg">
-                    {/* Header */}
-                    <div className="mb-6">
+            <div className="flex-1 flex flex-col justify-start py-6 px-4 sm:px-6 lg:px-12 xl:px-16 overflow-y-auto max-h-screen">
+                <motion.div
+                    className="mx-auto w-full max-w-xl"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.5 }}
+                >
+                    {/* Header - Reduced size and spacing */}
+                    <div className="mb-4">
                         <div className="flex items-center">
-                            <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-green-600 rounded-xl flex items-center justify-center mr-3 shadow-lg transform hover:rotate-12 transition-transform duration-300">
-                                <i className="pi pi-id-card text-white text-lg"></i>
-                            </div>
+                            <motion.div
+                                className="w-9 h-9 bg-gradient-to-br from-emerald-400 to-green-600 rounded-xl flex items-center justify-center mr-3 shadow-lg"
+                                whileHover={{ rotate: 12, scale: 1.05 }}
+                                transition={{ type: "spring", stiffness: 300 }}
+                            >
+                                <span className="text-white text-lg font-bold">C</span>
+                            </motion.div>
                             <div>
-                                <h1 className="text-2xl font-bold bg-gradient-to-r from-emerald-700 to-green-800 bg-clip-text text-transparent">
+                                <h1 className="text-xl font-bold bg-gradient-to-r from-emerald-600 to-green-700 bg-clip-text text-transparent">
                                     CAP_mis
                                 </h1>
                                 <p className="text-xs text-emerald-600 font-medium">Card Attendance & Permission MIS</p>
@@ -261,194 +277,245 @@ const MultiStepRegistration = () => {
                     <div className="mb-4">
                         <h2 className="text-xl font-bold text-gray-900">Create your account</h2>
                         <p className="mt-1 text-sm text-gray-600">
-                            Join CAP_mis and start managing your school efficiently
+                            Join thousands of schools managing their ID cards efficiently
                         </p>
                     </div>
 
-                    {/* Resume Controls */}
+                    {/* Resume Controls - Compact */}
                     {localStorage.getItem('registration_email') && currentStep === 1 && (
-                        <div className="flex space-x-2 mb-4">
+                        <motion.div
+                            className="flex space-x-2 mb-4"
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                        >
                             <button
                                 onClick={handleManualResume}
-                                className="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 rounded-lg text-emerald-700 text-xs font-medium transition-colors flex items-center"
+                                className="px-4 py-2 bg-white/80 backdrop-blur-sm hover:bg-emerald-50 border border-emerald-300 rounded-lg text-emerald-700 text-xs font-semibold transition-all flex items-center shadow-md hover:shadow-lg"
                             >
-                                <i className="pi pi-refresh mr-1 text-xs"></i>
+                                <svg className="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                </svg>
                                 Resume
                             </button>
                             <button
                                 onClick={handleStartFresh}
-                                className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-lg text-gray-700 text-xs font-medium transition-colors flex items-center"
+                                className="px-4 py-2 bg-white/80 backdrop-blur-sm hover:bg-gray-100 rounded-lg text-gray-700 text-xs font-semibold transition-all flex items-center shadow-md hover:shadow-lg"
                             >
-                                <i className="pi pi-times mr-1 text-xs"></i>
-                                Start Fresh
+                                <svg className="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                                Fresh Start
                             </button>
-                        </div>
+                        </motion.div>
                     )}
 
-                    {/* Resume Banner */}
+                    {/* Resume Banner - Compact */}
                     {registrationData.email && currentStep > 1 && (
                         <motion.div
                             initial={{ opacity: 0, y: -10 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="mb-4 p-3 bg-emerald-50 border border-emerald-200 rounded-xl"
+                            className="mb-4 p-2.5 bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200 rounded-xl backdrop-blur-sm"
                         >
                             <p className="text-emerald-700 text-xs flex items-center">
-                                <i className="pi pi-sync mr-2 text-xs"></i>
-                                Resuming for <strong className="mx-1">{registrationData.email}</strong>
+                                <svg className="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                </svg>
+                                Continuing: <strong className="mx-1">{registrationData.email}</strong>
                             </p>
                         </motion.div>
                     )}
 
-                    {/* Step indicator */}
-                    <StepIndicator
-                        steps={[
-                            { number: 1, title: 'Personal', icon: 'pi pi-user' },
-                            { number: 2, title: 'School', icon: 'pi pi-building' },
-                            { number: 3, title: 'Plan', icon: 'pi pi-star' },
-                            { number: 4, title: 'Payment', icon: 'pi pi-credit-card' },
-                            { number: 5, title: 'Complete', icon: 'pi pi-check-circle' }
-                        ]}
-                        currentStep={currentStep}
-                        className="mb-6"
-                    />
+                    {/* Step indicator - Compact */}
+                    <div className="mb-5">
+                        <StepIndicator
+                            steps={[
+                                { number: 1, title: 'Personal', icon: 'pi pi-user' },
+                                { number: 2, title: 'School', icon: 'pi pi-building' },
+                                { number: 3, title: 'Plan', icon: 'pi pi-star' },
+                                { number: 4, title: 'Payment', icon: 'pi pi-credit-card' },
+                                { number: 5, title: 'Complete', icon: 'pi pi-check-circle' }
+                            ]}
+                            currentStep={currentStep}
+                        />
+                    </div>
 
-                    {/* Error/Info message */}
+                    {/* Error/Info message - Compact */}
                     <AnimatePresence>
                         {error && (
                             <motion.div
                                 initial={{ opacity: 0, y: -10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -10 }}
-                                className={`mb-4 p-3 rounded-xl border text-sm ${error.type === 'info'
-                                        ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
-                                        : 'bg-red-50 border-red-200 text-red-800'
+                                className={`mb-4 p-2.5 rounded-lg border text-xs ${error.type === 'info'
+                                        ? 'bg-gradient-to-r from-emerald-50 to-green-50 border-emerald-300 text-emerald-800'
+                                        : 'bg-gradient-to-r from-red-50 to-red-100 border-red-300 text-red-800'
                                     }`}
                             >
                                 <span className="flex items-center">
-                                    <i className={`pi ${error.type === 'info' ? 'pi-info-circle' : 'pi-exclamation-circle'} mr-2`}></i>
+                                    <span className="mr-1.5">{error.type === 'info' ? 'ℹ️' : '⚠️'}</span>
                                     {typeof error === 'string' ? error : error.message}
                                 </span>
                             </motion.div>
                         )}
                     </AnimatePresence>
 
-                    {/* Step content */}
-                    <AnimatePresence mode="wait">
-                        <motion.div
-                            key={currentStep}
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: 20 }}
-                            transition={{ duration: 0.2 }}
-                        >
-                            {currentStep === 1 && (
-                                <PersonalInfoStep
-                                    onSubmit={handleStepComplete}
-                                    initialData={registrationData.personal}
-                                    loading={loading}
-                                />
-                            )}
-                            {currentStep === 2 && (
-                                <SchoolInfoStep
-                                    onSubmit={handleStepComplete}
-                                    initialData={registrationData.school}
-                                    loading={loading}
-                                />
-                            )}
-                            {currentStep === 3 && (
-                                <PlanSelectionStep
-                                    onSubmit={handleStepComplete}
-                                    initialData={registrationData.plan}
-                                    loading={loading}
-                                />
-                            )}
-                            {currentStep === 4 && (
-                                <PaymentStep
-                                    onSubmit={handleStepComplete}
-                                    plan={registrationData.plan}
-                                    loading={loading}
-                                />
-                            )}
-                            {currentStep === 5 && (
-                                <CompletionStep />
-                            )}
-                        </motion.div>
-                    </AnimatePresence>
+                    {/* Step content - Reduced padding */}
+                    <motion.div
+                        key={currentStep}
+                        initial={{ opacity: 0, x: -30 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 30 }}
+                        transition={{ duration: 0.3, type: "spring", damping: 20 }}
+                        className="bg-white/40 backdrop-blur-sm rounded-2xl p-5 shadow-xl border border-white/50"
+                    >
+                        {currentStep === 1 && (
+                            <PersonalInfoStep
+                                onSubmit={handleStepComplete}
+                                initialData={registrationData.personal}
+                                loading={loading}
+                            />
+                        )}
+                        {currentStep === 2 && (
+                            <SchoolInfoStep
+                                onSubmit={handleStepComplete}
+                                initialData={registrationData.school}
+                                loading={loading}
+                            />
+                        )}
+                        {currentStep === 3 && (
+                            <PlanSelectionStep
+                                onSubmit={handleStepComplete}
+                                initialData={registrationData.plan}
+                                loading={loading}
+                            />
+                        )}
+                        {currentStep === 4 && (
+                            <PaymentStep
+                                onSubmit={handleStepComplete}
+                                plan={registrationData.plan}
+                                loading={loading}
+                            />
+                        )}
+                        {currentStep === 5 && (
+                            <CompletionStep />
+                        )}
+                    </motion.div>
 
                     {/* Login link */}
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        transition={{ delay: 0.3 }}
-                        className="mt-6 text-center"
+                        transition={{ delay: 0.5 }}
+                        className="mt-4 text-center"
                     >
-                        <p className="text-sm text-gray-600">
+                        <p className="text-xs text-gray-600">
                             Already have an account?{' '}
                             <button
                                 onClick={() => navigate('/login')}
-                                className="text-emerald-600 hover:text-emerald-700 font-semibold transition-colors"
+                                className="text-emerald-600 hover:text-emerald-700 font-semibold transition-colors relative group"
                             >
                                 Sign in
+                                <span className="absolute bottom-0 left-0 w-full h-0.5 bg-emerald-500 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></span>
                             </button>
                         </p>
                     </motion.div>
-                </div>
+                </motion.div>
             </div>
 
-            {/* Right Side - Animated Features Section */}
+            {/* Right Side - Optimized for visibility */}
             <div className="hidden lg:block relative flex-1 bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 overflow-hidden">
                 {/* Animated Background */}
                 <div className="absolute inset-0">
-                    {/* Floating Elements */}
-                    <div className="absolute top-20 left-10 w-2 h-2 bg-emerald-400 rounded-full opacity-60 animate-float"></div>
-                    <div className="absolute top-40 right-20 w-3 h-3 bg-green-500 rounded-full opacity-40 animate-float-fast"></div>
-                    <div className="absolute bottom-32 left-20 w-4 h-4 bg-emerald-300 rounded-full opacity-50 animate-float-slow"></div>
-                    <div className="absolute bottom-20 right-10 w-2 h-2 bg-teal-400 rounded-full opacity-60 animate-float"></div>
-                    <div className="absolute top-60 left-1/2 w-3 h-3 bg-green-400 rounded-full opacity-40 animate-float-fast"></div>
+                    {/* Floating Orbs - Smaller and more subtle */}
+                    <motion.div
+                        className="absolute top-10 left-10 w-48 h-48 bg-gradient-to-br from-emerald-200/20 to-green-200/20 rounded-full blur-3xl"
+                        animate={{
+                            x: [0, 20, 0],
+                            y: [0, -20, 0],
+                        }}
+                        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+                    />
+                    <motion.div
+                        className="absolute bottom-10 right-10 w-64 h-64 bg-gradient-to-tr from-green-200/15 to-teal-200/15 rounded-full blur-3xl"
+                        animate={{
+                            x: [0, -30, 0],
+                            y: [0, 30, 0],
+                        }}
+                        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+                    />
 
-                    {/* Glowing Orbs */}
-                    <div className="absolute -top-20 -right-20 w-80 h-80 bg-gradient-to-br from-emerald-200/30 to-green-200/30 rounded-full blur-3xl animate-pulse-gentle"></div>
-                    <div className="absolute -bottom-32 -left-32 w-96 h-96 bg-gradient-to-tr from-green-200/20 to-emerald-200/20 rounded-full blur-3xl animate-pulse-gentle"></div>
-
-                    {/* Grid Pattern */}
-                    <div className="absolute inset-0 opacity-5 animated-grid"></div>
+                    {/* Floating Particles - Fewer */}
+                    {[...Array(12)].map((_, i) => (
+                        <motion.div
+                            key={i}
+                            className="absolute w-1.5 h-1.5 bg-emerald-400/40 rounded-full"
+                            initial={{
+                                x: Math.random() * 100 + '%',
+                                y: Math.random() * 100 + '%',
+                            }}
+                            animate={{
+                                y: [null, '-100%'],
+                                opacity: [0.4, 0]
+                            }}
+                            transition={{
+                                duration: Math.random() * 5 + 5,
+                                repeat: Infinity,
+                                delay: Math.random() * 5,
+                                ease: "linear"
+                            }}
+                        />
+                    ))}
                 </div>
 
-                {/* Content */}
-                <div className="relative z-10 h-full flex items-center justify-center p-12">
-                    <div className="text-center max-w-lg">
-                        {/* Animated Card Stack */}
+                {/* Content - Centered with proper spacing */}
+                <div className="relative z-10 h-full flex items-center justify-center p-8">
+                    <div className="text-center max-w-md">
+                        {/* Animated Card Stack - Smaller */}
                         <motion.div
-                            className="mb-8"
-                            initial={{ y: 20, opacity: 0 }}
+                            className="mb-6"
+                            initial={{ y: 30, opacity: 0 }}
                             animate={{ y: 0, opacity: 1 }}
-                            transition={{ duration: 0.6 }}
+                            transition={{ duration: 0.8, type: "spring" }}
                         >
-                            <div className="relative mx-auto w-40 h-48">
+                            <div className="relative mx-auto w-36 h-44">
+                                {/* Card 3 */}
                                 <motion.div
-                                    className="absolute inset-0 bg-gradient-to-br from-emerald-500 to-green-600 rounded-2xl shadow-2xl"
-                                    animate={{ rotate: [0, 3, 0] }}
-                                    transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                                >
-                                    <div className="w-full h-full flex items-center justify-center">
-                                        <i className="pi pi-id-card text-white text-5xl"></i>
-                                    </div>
-                                </motion.div>
-                                <motion.div
-                                    className="absolute inset-0 bg-gradient-to-br from-emerald-400 to-green-500 rounded-2xl shadow-xl -z-10"
-                                    animate={{ rotate: [-2, -5, -2], y: [0, 5, 0] }}
-                                    transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
-                                />
-                                <motion.div
-                                    className="absolute inset-0 bg-gradient-to-br from-emerald-600 to-green-700 rounded-2xl shadow-lg -z-20"
-                                    animate={{ rotate: [5, 8, 5], y: [0, 8, 0] }}
+                                    className="absolute inset-0 bg-gradient-to-br from-emerald-400 to-green-500 rounded-2xl shadow-xl"
+                                    animate={{
+                                        rotate: [0, 6, 0],
+                                        y: [0, -3, 0]
+                                    }}
                                     transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1 }}
                                 />
+
+                                {/* Card 2 */}
+                                <motion.div
+                                    className="absolute inset-0 bg-gradient-to-br from-green-400 to-teal-500 rounded-2xl shadow-lg"
+                                    animate={{
+                                        rotate: [0, -4, 0],
+                                        y: [0, 2, 0]
+                                    }}
+                                    transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+                                />
+
+                                {/* Card 1 - Main */}
+                                <motion.div
+                                    className="absolute inset-0 bg-gradient-to-br from-emerald-500 to-green-600 rounded-2xl shadow-2xl flex items-center justify-center"
+                                    whileHover={{ scale: 1.05, rotate: 2 }}
+                                    transition={{ type: "spring", stiffness: 300 }}
+                                >
+                                    <div className="text-center">
+                                        <span className="text-4xl mb-2 block">🪪</span>
+                                        <span className="text-white text-sm font-bold">ID Card</span>
+                                        <div className="mt-3 h-0.5 w-12 bg-white/30 rounded-full mx-auto"></div>
+                                    </div>
+                                </motion.div>
                             </div>
                         </motion.div>
 
+                        {/* Title - Reduced size */}
                         <motion.h3
-                            className="text-3xl font-bold bg-gradient-to-r from-emerald-700 to-green-800 bg-clip-text text-transparent mb-4"
+                            className="text-2xl font-bold bg-gradient-to-r from-emerald-700 via-green-700 to-teal-700 bg-clip-text text-transparent mb-3"
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.2 }}
@@ -456,39 +523,40 @@ const MultiStepRegistration = () => {
                             Smart Card Management
                         </motion.h3>
 
+                        {/* Description - Smaller font */}
                         <motion.p
-                            className="text-gray-600 text-lg leading-relaxed mb-8"
+                            className="text-gray-600 text-sm leading-relaxed mb-6"
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.3 }}
                         >
-                            Generate, track, and manage student ID cards with our automation system.
+                            Generate, track, and manage student ID cards with our futuristic automation system.
                         </motion.p>
 
-                        {/* Feature Cards */}
+                        {/* Feature List - Compact */}
                         <motion.div
-                            className="grid grid-cols-1 gap-4"
+                            className="grid gap-3"
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.4 }}
                         >
                             <FeatureCard
-                                icon="pi pi-bolt"
+                                icon="⚡"
                                 title="Batch Processing"
                                 description="Generate 500+ cards in minutes"
-                                color="from-amber-500 to-orange-500"
+                                color="from-amber-400 to-orange-500"
                             />
                             <FeatureCard
-                                icon="pi pi-palette"
+                                icon="🎨"
                                 title="Smart Templates"
                                 description="Drag & drop visual designer"
-                                color="from-emerald-500 to-green-500"
+                                color="from-emerald-400 to-green-500"
                             />
                             <FeatureCard
-                                icon="pi pi-chart-line"
+                                icon="📊"
                                 title="Real-time Analytics"
                                 description="Track usage and performance"
-                                color="from-blue-500 to-cyan-500"
+                                color="from-blue-400 to-cyan-500"
                             />
                         </motion.div>
                     </div>
@@ -498,17 +566,18 @@ const MultiStepRegistration = () => {
     );
 };
 
+// Feature Card Component - Compact
 const FeatureCard = ({ icon, title, description, color }) => (
     <motion.div
-        whileHover={{ scale: 1.02, x: 5 }}
-        className="flex items-center p-4 bg-white/80 backdrop-blur-sm rounded-xl border border-emerald-200/50 shadow-lg hover:shadow-xl transition-all"
+        whileHover={{ scale: 1.02, x: 3 }}
+        className="flex items-center p-3 bg-white/70 backdrop-blur-sm rounded-xl border border-white/50 shadow-md hover:shadow-lg transition-all group"
     >
-        <div className={`w-10 h-10 bg-gradient-to-br ${color} rounded-xl flex items-center justify-center mr-4 shadow-md`}>
-            <i className={`${icon} text-white text-lg`}></i>
+        <div className={`w-9 h-9 bg-gradient-to-br ${color} rounded-lg flex items-center justify-center mr-3 shadow-md group-hover:scale-105 transition-transform`}>
+            <span className="text-white text-base">{icon}</span>
         </div>
-        <div className="text-left">
-            <h4 className="font-semibold text-gray-900">{title}</h4>
-            <p className="text-sm text-gray-600">{description}</p>
+        <div className="text-left flex-1">
+            <h4 className="font-semibold text-gray-900 text-sm">{title}</h4>
+            <p className="text-xs text-gray-600">{description}</p>
         </div>
     </motion.div>
 );

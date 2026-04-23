@@ -1,4 +1,4 @@
-// components/auth/steps/SchoolInfoStep.jsx - EMERALD THEME WITH PRIMEICONS
+// components/auth/steps/SchoolInfoStep.jsx - FUTURISTIC REDESIGN
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { authAPI } from '../../../services/api';
@@ -21,11 +21,12 @@ const SchoolInfoStep = ({ onSubmit, initialData, loading }) => {
   const [schoolNameAvailable, setSchoolNameAvailable] = useState(true);
   const [checkingName, setCheckingName] = useState(false);
   const [suggestions, setSuggestions] = useState([]);
+  const [isDragging, setIsDragging] = useState(false);
 
   const schoolTypes = [
-    { value: 'secondary', label: 'Secondary School' },
-    { value: 'primary', label: 'Primary School' },
-    { value: 'both', label: 'Both' }
+    { value: 'secondary', label: 'Secondary School', icon: '🏫', color: 'from-blue-400 to-cyan-500' },
+    { value: 'primary', label: 'Primary School', icon: '🎒', color: 'from-emerald-400 to-green-500' },
+    { value: 'both', label: 'Both', icon: '🌟', color: 'from-purple-400 to-pink-500' }
   ];
 
   const checkSchoolName = async (name) => {
@@ -114,140 +115,349 @@ const SchoolInfoStep = ({ onSubmit, initialData, loading }) => {
     onSubmit(formData);
   };
 
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setSchoolData({ ...schoolData, logo: file, logoPreview: reader.result });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
-      <div>
-        <h2 className="text-xl font-bold text-gray-900 mb-1">School Information</h2>
-        <p className="text-sm text-gray-600">Tell us about your institution</p>
+    <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Header */}
+      <div className="relative mb-6">
+        <div className="absolute -left-4 top-0 w-1 h-12 bg-gradient-to-b from-emerald-400 to-green-500 rounded-full"></div>
+        <h2 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+          School Information
+        </h2>
+        <p className="text-sm text-gray-500 mt-1">Tell us about your institution</p>
       </div>
 
-      {/* School Name */}
+      {/* Logo Upload - Drag & Drop */}
+      <div className="flex items-start space-x-6">
+        <motion.div
+          className="relative"
+          whileHover={{ scale: 1.05 }}
+          transition={{ type: "spring", stiffness: 300 }}
+        >
+          <div
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            className={`relative w-28 h-28 rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 ${isDragging
+                ? 'border-4 border-emerald-400 bg-emerald-50 scale-105'
+                : 'border-3 border-dashed border-gray-300 bg-gradient-to-br from-gray-50 to-gray-100'
+              }`}
+          >
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleLogoSelect}
+              className="absolute inset-0 opacity-0 cursor-pointer z-10"
+            />
+
+            {schoolData.logoPreview ? (
+              <>
+                <img src={schoolData.logoPreview} alt="Logo" className="w-full h-full object-cover" />
+                <button
+                  type="button"
+                  onClick={removeLogo}
+                  className="absolute top-2 right-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-white hover:bg-red-600 transition-colors z-20"
+                >
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </>
+            ) : (
+              <motion.div
+                className="w-full h-full flex flex-col items-center justify-center"
+                animate={isDragging ? { scale: 1.1 } : { scale: 1 }}
+              >
+                <svg className="w-8 h-8 text-gray-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <span className="text-xs text-gray-500 text-center px-2">
+                  {isDragging ? 'Drop here' : 'Upload Logo'}
+                </span>
+              </motion.div>
+            )}
+          </div>
+          <p className="text-xs text-gray-500 mt-2 text-center">PNG, JPG up to 2MB</p>
+        </motion.div>
+
+        <div className="flex-1">
+          <p className="text-sm text-gray-700 mb-2">
+            Add your school logo to personalize your account
+          </p>
+          <div className="flex space-x-2">
+            <motion.button
+              type="button"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => document.querySelector('input[type="file"]').click()}
+              className="px-4 py-2 bg-gradient-to-r from-emerald-400 to-green-500 text-white text-sm font-medium rounded-xl shadow-md hover:shadow-lg transition-all"
+            >
+              Choose File
+            </motion.button>
+            {schoolData.logoPreview && (
+              <motion.button
+                type="button"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={removeLogo}
+                className="px-4 py-2 bg-gray-200 text-gray-700 text-sm font-medium rounded-xl hover:bg-gray-300 transition-all"
+              >
+                Remove
+              </motion.button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* School Name with Suggestions */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1.5">
-          School Name <span className="text-red-500">*</span>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          School Name <span className="text-red-400">*</span>
         </label>
         <div className="relative">
-          <input
-            type="text"
-            value={schoolData.schoolName}
-            onChange={handleSchoolNameChange}
-            className={`w-full px-4 py-2.5 bg-white border rounded-xl focus:outline-none focus:ring-2 transition-all ${errors.schoolName || (!schoolNameAvailable && schoolData.schoolName)
-                ? 'border-red-300 focus:ring-red-500'
-                : 'border-gray-300 focus:ring-emerald-500'
-              }`}
-            placeholder="e.g., Lycée de Kigali"
-          />
-          {checkingName && (
-            <div className="absolute right-3 top-1/2 -translate-y-1/2">
-              <i className="pi pi-spinner pi-spin text-emerald-500"></i>
-            </div>
-          )}
+          <motion.div
+            animate={checkingName ? { scale: [1, 1.02, 1] } : {}}
+            transition={{ duration: 1, repeat: Infinity }}
+            className="relative"
+          >
+            <input
+              type="text"
+              value={schoolData.schoolName}
+              onChange={handleSchoolNameChange}
+              className={`w-full px-4 py-3 bg-white/80 backdrop-blur-sm border-2 rounded-xl focus:outline-none transition-all duration-300 ${errors.schoolName || (!schoolNameAvailable && schoolData.schoolName)
+                  ? 'border-red-300 focus:border-red-400'
+                  : 'border-gray-200 focus:border-emerald-400'
+                }`}
+              placeholder="e.g., Lycée de Kigali"
+            />
+            {checkingName && (
+              <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                  className="w-5 h-5 border-2 border-emerald-400 border-t-transparent rounded-full"
+                />
+              </div>
+            )}
+            {!checkingName && schoolData.schoolName && schoolNameAvailable && (
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                className="absolute right-3 top-1/2 -translate-y-1/2"
+              >
+                <div className="w-5 h-5 bg-green-400 rounded-full flex items-center justify-center">
+                  <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+              </motion.div>
+            )}
+          </motion.div>
         </div>
 
         <AnimatePresence>
           {!schoolNameAvailable && suggestions.length > 0 && (
             <motion.div
-              initial={{ opacity: 0, y: -5 }}
+              initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -5 }}
-              className="mt-2 p-3 bg-emerald-50 border border-emerald-200 rounded-lg"
+              exit={{ opacity: 0, y: -10 }}
+              className="mt-3 p-4 bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200 rounded-xl"
             >
               <p className="text-xs text-emerald-700 mb-2 flex items-center">
-                <i className="pi pi-lightbulb mr-1"></i>
+                <span className="mr-2">💡</span>
                 Try these alternatives:
               </p>
-              <div className="flex flex-wrap gap-1.5">
+              <div className="flex flex-wrap gap-2">
                 {suggestions.map((suggestion, index) => (
-                  <button
+                  <motion.button
                     key={index}
                     type="button"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                     onClick={() => {
                       setSchoolData({ ...schoolData, schoolName: suggestion });
                       checkSchoolName(suggestion);
                     }}
-                    className="px-3 py-1 bg-white hover:bg-emerald-100 rounded-full text-xs text-gray-700 transition-colors border border-emerald-200"
+                    className="px-3 py-1.5 bg-white hover:bg-emerald-100 rounded-lg text-sm text-gray-700 transition-all border border-emerald-200 shadow-sm"
                   >
                     {suggestion}
-                  </button>
+                  </motion.button>
                 ))}
               </div>
             </motion.div>
           )}
         </AnimatePresence>
-        {errors.schoolName && <p className="mt-1 text-xs text-red-600">{errors.schoolName}</p>}
+
+        <AnimatePresence>
+          {errors.schoolName && (
+            <motion.p
+              initial={{ opacity: 0, y: -5 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -5 }}
+              className="mt-1 text-xs text-red-500 flex items-center"
+            >
+              <span className="mr-1">⚠️</span> {errors.schoolName}
+            </motion.p>
+          )}
+        </AnimatePresence>
       </div>
 
-      {/* School Type */}
+      {/* School Type - Animated Cards */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1.5">
-          School Type <span className="text-red-500">*</span>
+        <label className="block text-sm font-medium text-gray-700 mb-3">
+          School Type <span className="text-red-400">*</span>
         </label>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-3 gap-3">
           {schoolTypes.map((type) => (
             <motion.button
               key={type.value}
               type="button"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              whileHover={{ scale: 1.05, y: -2 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => setSchoolData({ ...schoolData, schoolType: type.value })}
-              className={`p-2.5 rounded-xl border-2 transition-all text-sm font-medium ${schoolData.schoolType === type.value
-                  ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
-                  : 'border-gray-200 bg-white text-gray-600 hover:border-emerald-200'
+              className={`relative p-4 rounded-xl border-2 transition-all duration-300 overflow-hidden ${schoolData.schoolType === type.value
+                  ? `border-transparent shadow-lg`
+                  : 'border-gray-200 bg-white hover:border-emerald-200'
                 }`}
             >
-              {type.label}
+              {/* Background gradient for selected state */}
+              {schoolData.schoolType === type.value && (
+                <motion.div
+                  layoutId="selectedType"
+                  className={`absolute inset-0 bg-gradient-to-br ${type.color} opacity-10`}
+                  transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                />
+              )}
+
+              <div className="relative z-10">
+                <span className="text-2xl mb-2 block">{type.icon}</span>
+                <div className={`text-sm font-medium ${schoolData.schoolType === type.value ? 'text-gray-900' : 'text-gray-600'
+                  }`}>
+                  {type.label}
+                </div>
+              </div>
+
+              {schoolData.schoolType === type.value && (
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  className="absolute top-2 right-2 z-10"
+                >
+                  <div className={`w-5 h-5 bg-gradient-to-br ${type.color} rounded-full flex items-center justify-center`}>
+                    <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                </motion.div>
+              )}
             </motion.button>
           ))}
         </div>
       </div>
 
-      {/* Contact Info */}
-      <div className="grid grid-cols-2 gap-3">
+      {/* Contact Information - Side by side */}
+      <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">
-            School Email <span className="text-red-500">*</span>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            School Email <span className="text-red-400">*</span>
           </label>
-          <input
-            type="email"
-            value={schoolData.schoolEmail}
-            onChange={(e) => setSchoolData({ ...schoolData, schoolEmail: e.target.value })}
-            className={`w-full px-4 py-2.5 bg-white border rounded-xl focus:outline-none focus:ring-2 ${errors.schoolEmail ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-emerald-500'
-              }`}
-            placeholder="info@school.com"
-          />
-          {errors.schoolEmail && <p className="mt-1 text-xs text-red-600">{errors.schoolEmail}</p>}
+          <div className="relative">
+            <input
+              type="email"
+              value={schoolData.schoolEmail}
+              onChange={(e) => setSchoolData({ ...schoolData, schoolEmail: e.target.value })}
+              className={`w-full px-4 py-3 bg-white/80 backdrop-blur-sm border-2 rounded-xl focus:outline-none transition-all duration-300 ${errors.schoolEmail ? 'border-red-300 focus:border-red-400' : 'border-gray-200 focus:border-emerald-400'
+                }`}
+              placeholder="info@school.edu"
+            />
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">✉️</div>
+          </div>
+          <AnimatePresence>
+            {errors.schoolEmail && (
+              <motion.p
+                initial={{ opacity: 0, y: -5 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -5 }}
+                className="mt-1 text-xs text-red-500"
+              >
+                {errors.schoolEmail}
+              </motion.p>
+            )}
+          </AnimatePresence>
         </div>
+
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">
-            School Phone <span className="text-red-500">*</span>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            School Phone <span className="text-red-400">*</span>
           </label>
-          <input
-            type="tel"
-            value={schoolData.schoolPhone}
-            onChange={(e) => setSchoolData({ ...schoolData, schoolPhone: e.target.value })}
-            className={`w-full px-4 py-2.5 bg-white border rounded-xl focus:outline-none focus:ring-2 ${errors.schoolPhone ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-emerald-500'
-              }`}
-            placeholder="+250 788 123 456"
-          />
-          {errors.schoolPhone && <p className="mt-1 text-xs text-red-600">{errors.schoolPhone}</p>}
+          <div className="relative">
+            <input
+              type="tel"
+              value={schoolData.schoolPhone}
+              onChange={(e) => setSchoolData({ ...schoolData, schoolPhone: e.target.value })}
+              className={`w-full px-4 py-3 bg-white/80 backdrop-blur-sm border-2 rounded-xl focus:outline-none transition-all duration-300 ${errors.schoolPhone ? 'border-red-300 focus:border-red-400' : 'border-gray-200 focus:border-emerald-400'
+                }`}
+              placeholder="+250 788 123 456"
+            />
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">📞</div>
+          </div>
+          <AnimatePresence>
+            {errors.schoolPhone && (
+              <motion.p
+                initial={{ opacity: 0, y: -5 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -5 }}
+                className="mt-1 text-xs text-red-500"
+              >
+                {errors.schoolPhone}
+              </motion.p>
+            )}
+          </AnimatePresence>
         </div>
       </div>
 
-      {/* Address */}
-      <div className="space-y-3">
-        <h3 className="text-sm font-semibold text-gray-900 flex items-center">
-          <i className="pi pi-map-marker mr-1.5 text-emerald-600"></i>
-          Address
-        </h3>
+      {/* Address Section with Map Icon */}
+      <div className="space-y-4">
+        <div className="flex items-center space-x-2">
+          <div className="w-6 h-6 bg-gradient-to-br from-emerald-400 to-green-500 rounded-lg flex items-center justify-center">
+            <span className="text-white text-xs">📍</span>
+          </div>
+          <h3 className="text-sm font-semibold text-gray-900">School Address</h3>
+        </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">Province *</label>
             <input
               type="text"
               value={schoolData.province}
               onChange={(e) => setSchoolData({ ...schoolData, province: e.target.value })}
-              className={`w-full px-3 py-2 bg-white border rounded-lg text-sm focus:outline-none focus:ring-2 ${errors.province ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-emerald-500'
+              className={`w-full px-4 py-2.5 bg-white/80 backdrop-blur-sm border-2 rounded-xl text-sm focus:outline-none transition-all duration-300 ${errors.province ? 'border-red-300 focus:border-red-400' : 'border-gray-200 focus:border-emerald-400'
                 }`}
               placeholder="Southern Province"
             />
@@ -258,21 +468,21 @@ const SchoolInfoStep = ({ onSubmit, initialData, loading }) => {
               type="text"
               value={schoolData.district}
               onChange={(e) => setSchoolData({ ...schoolData, district: e.target.value })}
-              className={`w-full px-3 py-2 bg-white border rounded-lg text-sm focus:outline-none focus:ring-2 ${errors.district ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-emerald-500'
+              className={`w-full px-4 py-2.5 bg-white/80 backdrop-blur-sm border-2 rounded-xl text-sm focus:outline-none transition-all duration-300 ${errors.district ? 'border-red-300 focus:border-red-400' : 'border-gray-200 focus:border-emerald-400'
                 }`}
               placeholder="Huye"
             />
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">Sector *</label>
             <input
               type="text"
               value={schoolData.sector}
               onChange={(e) => setSchoolData({ ...schoolData, sector: e.target.value })}
-              className={`w-full px-3 py-2 bg-white border rounded-lg text-sm focus:outline-none focus:ring-2 ${errors.sector ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-emerald-500'
+              className={`w-full px-4 py-2.5 bg-white/80 backdrop-blur-sm border-2 rounded-xl text-sm focus:outline-none transition-all duration-300 ${errors.sector ? 'border-red-300 focus:border-red-400' : 'border-gray-200 focus:border-emerald-400'
                 }`}
               placeholder="Ngoma"
             />
@@ -283,80 +493,55 @@ const SchoolInfoStep = ({ onSubmit, initialData, loading }) => {
               type="text"
               value={schoolData.country}
               onChange={(e) => setSchoolData({ ...schoolData, country: e.target.value })}
-              className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full px-4 py-2.5 bg-white/80 backdrop-blur-sm border-2 border-gray-200 rounded-xl text-sm focus:outline-none focus:border-emerald-400 transition-all duration-300"
               placeholder="Rwanda"
             />
           </div>
         </div>
       </div>
 
-      {/* Logo Upload */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">School Logo</label>
-        <div className="flex items-center space-x-4">
-          <div className="relative w-20 h-20 rounded-xl bg-gray-50 border-2 border-dashed border-gray-300 overflow-hidden">
-            {schoolData.logoPreview ? (
-              <>
-                <img src={schoolData.logoPreview} alt="Logo" className="w-full h-full object-cover" />
-                <button
-                  type="button"
-                  onClick={removeLogo}
-                  className="absolute top-1 right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-white text-xs hover:bg-red-600"
-                >
-                  <i className="pi pi-times text-xs"></i>
-                </button>
-              </>
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-gray-400">
-                <i className="pi pi-image text-2xl"></i>
-              </div>
-            )}
-          </div>
-          <div>
-            <input type="file" id="logo-upload" accept="image/*" onChange={handleLogoSelect} className="hidden" />
-            <label
-              htmlFor="logo-upload"
-              className="inline-flex items-center px-4 py-2 bg-white border border-gray-300 hover:bg-gray-50 rounded-lg text-sm text-gray-700 cursor-pointer transition-colors"
-            >
-              <i className="pi pi-upload mr-2"></i>
-              Choose Logo
-            </label>
-            <p className="mt-1 text-xs text-gray-500">Square image, max 2MB</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Submit */}
-      <div className="flex justify-between pt-4 border-t border-gray-200">
+      {/* Navigation Buttons */}
+      <div className="flex justify-between pt-6 border-t border-gray-200">
         <motion.button
-          whileHover={{ scale: 1.02 }}
+          whileHover={{ scale: 1.02, x: -2 }}
           whileTap={{ scale: 0.98 }}
           type="button"
           onClick={() => window.history.back()}
-          className="px-5 py-2.5 text-gray-700 font-medium rounded-xl hover:bg-gray-100 transition-colors flex items-center"
+          className="px-6 py-3 text-gray-600 font-medium rounded-xl hover:bg-gray-100 transition-all flex items-center group"
         >
-          <i className="pi pi-arrow-left mr-2"></i>
+          <svg className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
           Back
         </motion.button>
 
         <motion.button
-          whileHover={{ scale: 1.02 }}
+          whileHover={{ scale: 1.02, y: -2 }}
           whileTap={{ scale: 0.98 }}
           type="submit"
           disabled={loading}
-          className="px-6 py-2.5 bg-gradient-to-r from-emerald-500 to-green-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all disabled:opacity-50 flex items-center"
+          className="relative px-8 py-3 bg-gradient-to-r from-emerald-500 via-green-500 to-emerald-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all disabled:opacity-50 overflow-hidden group"
         >
-          {loading ? (
-            <>
-              <i className="pi pi-spinner pi-spin mr-2"></i>
-              Saving...
-            </>
-          ) : (
-            <>
-              Continue to Plans
-              <i className="pi pi-arrow-right ml-2"></i>
-            </>
-          )}
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+          <span className="relative z-10 flex items-center">
+            {loading ? (
+              <>
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                  className="w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2"
+                />
+                Saving...
+              </>
+            ) : (
+              <>
+                Continue to Plans
+                <svg className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              </>
+            )}
+          </span>
         </motion.button>
       </div>
     </form>

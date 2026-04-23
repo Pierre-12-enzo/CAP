@@ -1,4 +1,4 @@
-// components/auth/steps/PaymentStep.jsx - EMERALD THEME WITH PRIMEICONS
+// components/auth/steps/PaymentStep.jsx - FUTURISTIC REDESIGN
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -15,11 +15,30 @@ const PaymentStep = ({ onSubmit, plan, loading }) => {
   });
   const [errors, setErrors] = useState({});
   const [processing, setProcessing] = useState(false);
+  const [cardFocused, setCardFocused] = useState(false);
 
   const paymentMethods = [
-    { id: 'momo', name: 'Mobile Money', icon: 'pi pi-mobile', providers: ['MTN', 'Orange', 'Moov'] },
-    { id: 'card', name: 'Credit/Debit Card', icon: 'pi pi-credit-card', providers: ['Visa', 'Mastercard'] },
-    { id: 'bank', name: 'Bank Transfer', icon: 'pi pi-building', providers: ['Ecobank', 'Société Générale', 'BICEC'] }
+    {
+      id: 'momo',
+      name: 'Mobile Money',
+      icon: '📱',
+      color: 'from-yellow-400 to-orange-500',
+      providers: ['MTN', 'Orange', 'Moov']
+    },
+    {
+      id: 'card',
+      name: 'Credit Card',
+      icon: '💳',
+      color: 'from-blue-400 to-cyan-500',
+      providers: ['Visa', 'Mastercard']
+    },
+    {
+      id: 'bank',
+      name: 'Bank Transfer',
+      icon: '🏦',
+      color: 'from-purple-400 to-pink-500',
+      providers: ['Ecobank', 'Société Générale', 'BICEC']
+    }
   ];
 
   const handleMethodChange = (method) => {
@@ -46,9 +65,13 @@ const PaymentStep = ({ onSubmit, plan, loading }) => {
       }
       if (!paymentDetails.cardExpiry) {
         newErrors.cardExpiry = 'Expiry date is required';
+      } else if (!/^(0[1-9]|1[0-2])\/([0-9]{2})$/.test(paymentDetails.cardExpiry)) {
+        newErrors.cardExpiry = 'Invalid format (MM/YY)';
       }
       if (!paymentDetails.cardCvv) {
         newErrors.cardCvv = 'CVV is required';
+      } else if (!/^[0-9]{3,4}$/.test(paymentDetails.cardCvv)) {
+        newErrors.cardCvv = 'Invalid CVV';
       }
       if (!paymentDetails.cardName) {
         newErrors.cardName = 'Name on card is required';
@@ -94,117 +117,253 @@ const PaymentStep = ({ onSubmit, plan, loading }) => {
     return parts.length ? parts.join(' ') : value;
   };
 
+  const formatExpiry = (value) => {
+    const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
+    if (v.length >= 2) {
+      return v.slice(0, 2) + '/' + v.slice(2, 4);
+    }
+    return v;
+  };
+
+  const getCardType = (number) => {
+    const cleaned = number.replace(/\s/g, '');
+    if (cleaned.startsWith('4')) return 'visa';
+    if (cleaned.startsWith('5')) return 'mastercard';
+    return 'generic';
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div>
-        <h2 className="text-xl font-bold text-gray-900 mb-1">Payment Details</h2>
-        <p className="text-sm text-gray-600">Choose your payment method to complete registration</p>
+      {/* Header */}
+      <div className="relative mb-6">
+        <div className="absolute -left-4 top-0 w-1 h-12 bg-gradient-to-b from-emerald-400 to-green-500 rounded-full"></div>
+        <h2 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+          Payment Details
+        </h2>
+        <p className="text-sm text-gray-500 mt-1">Complete your registration securely</p>
       </div>
 
-      {/* Order summary */}
-      <div className="bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl p-5 border border-emerald-200">
-        <h3 className="text-base font-semibold text-gray-900 mb-3 flex items-center">
-          <i className="pi pi-shopping-cart mr-2 text-emerald-600"></i>
-          Order Summary
-        </h3>
-        <div className="space-y-2 text-sm">
-          <div className="flex justify-between text-gray-700">
-            <span>Plan: {plan?.planName || 'Selected Plan'}</span>
-            <span className="font-medium">{plan?.price ? `${plan.price.toLocaleString()} XAF` : ''}</span>
-          </div>
-          <div className="flex justify-between text-gray-700">
-            <span>Billing cycle</span>
-            <span className="capitalize">{plan?.billingCycle || 'Monthly'}</span>
-          </div>
-          <div className="border-t border-emerald-200 my-2 pt-2">
-            <div className="flex justify-between text-gray-900 font-bold">
-              <span>Total</span>
-              <span className="text-emerald-700">{plan?.price ? `${plan.price.toLocaleString()} XAF` : ''}</span>
+      {/* Order Summary - Glass Card */}
+      <motion.div
+        className="relative p-6 rounded-2xl overflow-hidden"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        style={{
+          background: 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.7) 100%)',
+          backdropFilter: 'blur(10px)',
+          border: '1px solid rgba(16, 185, 129, 0.2)'
+        }}
+      >
+        {/* Animated Background */}
+        <div className="absolute inset-0 bg-gradient-to-r from-emerald-400/10 via-green-400/10 to-teal-400/10 animate-gradient-x"></div>
+
+        <div className="relative z-10">
+          <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
+            <span className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-green-500 rounded-lg flex items-center justify-center mr-3">
+              <span className="text-white text-sm">🛒</span>
+            </span>
+            Order Summary
+          </h3>
+
+          <div className="space-y-3">
+            <div className="flex justify-between items-center py-2 border-b border-gray-200">
+              <span className="text-gray-600">Plan</span>
+              <span className="font-semibold text-gray-900">{plan?.planName || 'Selected Plan'}</span>
+            </div>
+            <div className="flex justify-between items-center py-2 border-b border-gray-200">
+              <span className="text-gray-600">Billing Cycle</span>
+              <span className="font-semibold text-gray-900 capitalize">{plan?.billingCycle || 'Monthly'}</span>
+            </div>
+            <div className="flex justify-between items-center pt-2">
+              <span className="text-lg font-bold text-gray-900">Total</span>
+              <motion.span
+                className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-green-600 bg-clip-text text-transparent"
+                animate={{ scale: [1, 1.05, 1] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              >
+                {plan?.price ? `${plan.price.toLocaleString()} XAF` : ''}
+              </motion.span>
             </div>
           </div>
         </div>
-      </div>
+      </motion.div>
 
-      {/* Payment methods */}
+      {/* Payment Methods - Animated Selection */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-3">
           Select Payment Method
         </label>
-        <div className="grid grid-cols-3 gap-2">
-          {paymentMethods.map((method) => (
+        <div className="grid grid-cols-3 gap-3">
+          {paymentMethods.map((method, index) => (
             <motion.button
               key={method.id}
               type="button"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+              whileHover={{ scale: 1.05, y: -2 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => handleMethodChange(method.id)}
-              className={`p-3 rounded-xl border-2 transition-all ${paymentMethod === method.id
-                  ? 'border-emerald-500 bg-emerald-50'
-                  : 'border-gray-200 bg-white hover:border-emerald-200'
+              className={`relative p-4 rounded-xl transition-all duration-300 overflow-hidden ${paymentMethod === method.id
+                  ? `bg-gradient-to-br ${method.color} text-white shadow-xl`
+                  : 'bg-white/80 backdrop-blur-sm border-2 border-gray-200 hover:border-emerald-200'
                 }`}
             >
-              <i className={`${method.icon} text-xl mb-1 ${paymentMethod === method.id ? 'text-emerald-600' : 'text-gray-500'}`}></i>
-              <div className={`text-xs font-medium ${paymentMethod === method.id ? 'text-emerald-700' : 'text-gray-600'}`}>
-                {method.name}
+              {/* Animated Background for Selected */}
+              {paymentMethod === method.id && (
+                <motion.div
+                  layoutId="selectedPayment"
+                  className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent"
+                  transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                />
+              )}
+
+              <div className="relative z-10">
+                <span className="text-2xl mb-2 block">{method.icon}</span>
+                <div className={`text-sm font-semibold ${paymentMethod === method.id ? 'text-white' : 'text-gray-700'
+                  }`}>
+                  {method.name}
+                </div>
               </div>
+
+              {paymentMethod === method.id && (
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  className="absolute top-2 right-2 z-10"
+                >
+                  <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center">
+                    <svg className="w-3 h-3 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                </motion.div>
+              )}
             </motion.button>
           ))}
         </div>
       </div>
 
-      {/* Payment form based on method */}
+      {/* Payment Forms */}
       <AnimatePresence mode="wait">
         {paymentMethod === 'momo' && (
           <motion.div
             key="momo"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 20 }}
             className="space-y-4"
           >
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Provider</label>
-              <select
-                value={paymentDetails.momoProvider}
-                onChange={(e) => setPaymentDetails({ ...paymentDetails, momoProvider: e.target.value })}
-                className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-              >
-                <option value="mtn">MTN Mobile Money</option>
-                <option value="orange">Orange Money</option>
-                <option value="moov">Moov Money</option>
-              </select>
+              <div className="grid grid-cols-3 gap-2">
+                {['MTN', 'Orange', 'Moov'].map((provider) => (
+                  <motion.button
+                    key={provider}
+                    type="button"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setPaymentDetails({ ...paymentDetails, momoProvider: provider.toLowerCase() })}
+                    className={`py-3 px-4 rounded-xl font-medium transition-all ${paymentDetails.momoProvider === provider.toLowerCase()
+                        ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-white shadow-lg'
+                        : 'bg-white border-2 border-gray-200 text-gray-700 hover:border-orange-300'
+                      }`}
+                  >
+                    {provider}
+                  </motion.button>
+                ))}
+              </div>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
-              <input
-                type="tel"
-                value={paymentDetails.momoNumber}
-                onChange={(e) => setPaymentDetails({ ...paymentDetails, momoNumber: e.target.value })}
-                className={`w-full px-4 py-2.5 bg-white border rounded-xl focus:outline-none focus:ring-2 transition-all ${errors.momoNumber
-                    ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
-                    : 'border-gray-300 focus:ring-emerald-500 focus:border-emerald-500'
-                  }`}
-                placeholder="6XXXXXXXX"
-              />
-              {errors.momoNumber && <p className="mt-1 text-xs text-red-600">{errors.momoNumber}</p>}
+              <div className="relative">
+                <input
+                  type="tel"
+                  value={paymentDetails.momoNumber}
+                  onChange={(e) => setPaymentDetails({ ...paymentDetails, momoNumber: e.target.value })}
+                  className={`w-full px-4 py-3 bg-white/80 backdrop-blur-sm border-2 rounded-xl focus:outline-none transition-all duration-300 ${errors.momoNumber ? 'border-red-300 focus:border-red-400' : 'border-gray-200 focus:border-emerald-400'
+                    }`}
+                  placeholder="6XXXXXXXX"
+                />
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">📱</div>
+              </div>
+              {errors.momoNumber && (
+                <motion.p
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-1 text-xs text-red-500 flex items-center"
+                >
+                  <span className="mr-1">⚠️</span> {errors.momoNumber}
+                </motion.p>
+              )}
             </div>
 
-            <p className="text-xs text-gray-500 flex items-center">
-              <i className="pi pi-info-circle mr-1 text-emerald-500"></i>
-              You'll receive a payment request on your phone
-            </p>
+            <motion.div
+              className="p-4 bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl border border-emerald-200"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+            >
+              <p className="text-sm text-emerald-700 flex items-center">
+                <span className="mr-2">💡</span>
+                You'll receive a payment prompt on your phone. Enter your PIN to complete the transaction.
+              </p>
+            </motion.div>
           </motion.div>
         )}
 
         {paymentMethod === 'card' && (
           <motion.div
             key="card"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 20 }}
             className="space-y-4"
           >
+            {/* Virtual Card Preview */}
+            <motion.div
+              className="relative h-52 rounded-2xl overflow-hidden"
+              animate={cardFocused ? { scale: 1.02 } : { scale: 1 }}
+              style={{
+                background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
+                boxShadow: '0 20px 40px rgba(0,0,0,0.3)'
+              }}
+            >
+              <div className="absolute inset-0 opacity-20">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full blur-3xl"></div>
+              </div>
+
+              <div className="relative z-10 p-6 h-full flex flex-col justify-between">
+                <div className="flex justify-between items-start">
+                  <span className="text-white/80 text-sm font-medium">Credit Card</span>
+                  <span className="text-2xl">
+                    {getCardType(paymentDetails.cardNumber) === 'visa' && '💳'}
+                    {getCardType(paymentDetails.cardNumber) === 'mastercard' && '💳'}
+                  </span>
+                </div>
+
+                <div>
+                  <div className="text-2xl text-white font-mono tracking-wider mb-4">
+                    {paymentDetails.cardNumber || '•••• •••• •••• ••••'}
+                  </div>
+                  <div className="flex justify-between">
+                    <div>
+                      <div className="text-white/60 text-xs mb-1">Card Holder</div>
+                      <div className="text-white font-medium">
+                        {paymentDetails.cardName || 'YOUR NAME'}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-white/60 text-xs mb-1">Expires</div>
+                      <div className="text-white font-medium">
+                        {paymentDetails.cardExpiry || 'MM/YY'}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Card Number</label>
               <div className="relative">
@@ -212,30 +371,47 @@ const PaymentStep = ({ onSubmit, plan, loading }) => {
                   type="text"
                   value={paymentDetails.cardNumber}
                   onChange={(e) => setPaymentDetails({ ...paymentDetails, cardNumber: formatCardNumber(e.target.value) })}
+                  onFocus={() => setCardFocused(true)}
+                  onBlur={() => setCardFocused(false)}
                   maxLength="19"
-                  className={`w-full px-4 py-2.5 pl-10 bg-white border rounded-xl focus:outline-none focus:ring-2 transition-all ${errors.cardNumber
-                      ? 'border-red-300 focus:ring-red-500'
-                      : 'border-gray-300 focus:ring-emerald-500'
+                  className={`w-full px-4 py-3 bg-white/80 backdrop-blur-sm border-2 rounded-xl focus:outline-none transition-all duration-300 ${errors.cardNumber ? 'border-red-300 focus:border-red-400' : 'border-gray-200 focus:border-emerald-400'
                     }`}
                   placeholder="1234 5678 9012 3456"
                 />
-                <i className="pi pi-credit-card absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">💳</div>
               </div>
-              {errors.cardNumber && <p className="mt-1 text-xs text-red-600">{errors.cardNumber}</p>}
+              {errors.cardNumber && (
+                <motion.p
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-1 text-xs text-red-500"
+                >
+                  {errors.cardNumber}
+                </motion.p>
+              )}
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Expiry</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Expiry Date</label>
                 <input
                   type="text"
                   value={paymentDetails.cardExpiry}
-                  onChange={(e) => setPaymentDetails({ ...paymentDetails, cardExpiry: e.target.value })}
+                  onChange={(e) => setPaymentDetails({ ...paymentDetails, cardExpiry: formatExpiry(e.target.value) })}
                   placeholder="MM/YY"
                   maxLength="5"
-                  className={`w-full px-4 py-2.5 bg-white border rounded-xl focus:outline-none focus:ring-2 ${errors.cardExpiry ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-emerald-500'
+                  className={`w-full px-4 py-3 bg-white/80 backdrop-blur-sm border-2 rounded-xl focus:outline-none transition-all duration-300 ${errors.cardExpiry ? 'border-red-300 focus:border-red-400' : 'border-gray-200 focus:border-emerald-400'
                     }`}
                 />
+                {errors.cardExpiry && (
+                  <motion.p
+                    initial={{ opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mt-1 text-xs text-red-500"
+                  >
+                    {errors.cardExpiry}
+                  </motion.p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">CVV</label>
@@ -244,10 +420,19 @@ const PaymentStep = ({ onSubmit, plan, loading }) => {
                   value={paymentDetails.cardCvv}
                   onChange={(e) => setPaymentDetails({ ...paymentDetails, cardCvv: e.target.value })}
                   maxLength="4"
-                  className={`w-full px-4 py-2.5 bg-white border rounded-xl focus:outline-none focus:ring-2 ${errors.cardCvv ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-emerald-500'
+                  className={`w-full px-4 py-3 bg-white/80 backdrop-blur-sm border-2 rounded-xl focus:outline-none transition-all duration-300 ${errors.cardCvv ? 'border-red-300 focus:border-red-400' : 'border-gray-200 focus:border-emerald-400'
                     }`}
                   placeholder="123"
                 />
+                {errors.cardCvv && (
+                  <motion.p
+                    initial={{ opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mt-1 text-xs text-red-500"
+                  >
+                    {errors.cardCvv}
+                  </motion.p>
+                )}
               </div>
             </div>
 
@@ -256,11 +441,20 @@ const PaymentStep = ({ onSubmit, plan, loading }) => {
               <input
                 type="text"
                 value={paymentDetails.cardName}
-                onChange={(e) => setPaymentDetails({ ...paymentDetails, cardName: e.target.value })}
-                className={`w-full px-4 py-2.5 bg-white border rounded-xl focus:outline-none focus:ring-2 ${errors.cardName ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-emerald-500'
+                onChange={(e) => setPaymentDetails({ ...paymentDetails, cardName: e.target.value.toUpperCase() })}
+                className={`w-full px-4 py-3 bg-white/80 backdrop-blur-sm border-2 rounded-xl focus:outline-none transition-all duration-300 ${errors.cardName ? 'border-red-300 focus:border-red-400' : 'border-gray-200 focus:border-emerald-400'
                   }`}
                 placeholder="JOHN DOE"
               />
+              {errors.cardName && (
+                <motion.p
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-1 text-xs text-red-500"
+                >
+                  {errors.cardName}
+                </motion.p>
+              )}
             </div>
           </motion.div>
         )}
@@ -268,23 +462,42 @@ const PaymentStep = ({ onSubmit, plan, loading }) => {
         {paymentMethod === 'bank' && (
           <motion.div
             key="bank"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 20 }}
             className="space-y-4"
           >
-            <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-              <h4 className="text-sm font-semibold text-gray-900 mb-2 flex items-center">
-                <i className="pi pi-building mr-2 text-emerald-600"></i>
+            <motion.div
+              className="p-6 bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl border border-gray-200"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <h4 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
+                <span className="w-8 h-8 bg-gradient-to-br from-purple-400 to-pink-500 rounded-lg flex items-center justify-center mr-3">
+                  <span className="text-white text-sm">🏦</span>
+                </span>
                 Bank Transfer Details
               </h4>
-              <div className="space-y-1 text-sm text-gray-600">
-                <p><span className="font-medium">Bank:</span> Ecobank Cameroon</p>
-                <p><span className="font-medium">Account Name:</span> CAP MIS</p>
-                <p><span className="font-medium">Account Number:</span> 12345678901</p>
-                <p><span className="font-medium">Amount:</span> {plan?.price?.toLocaleString()} XAF</p>
+
+              <div className="space-y-3 text-sm">
+                <div className="flex justify-between py-2 border-b border-gray-200">
+                  <span className="text-gray-600">Bank</span>
+                  <span className="font-semibold text-gray-900">Ecobank Cameroon</span>
+                </div>
+                <div className="flex justify-between py-2 border-b border-gray-200">
+                  <span className="text-gray-600">Account Name</span>
+                  <span className="font-semibold text-gray-900">CAP MIS</span>
+                </div>
+                <div className="flex justify-between py-2 border-b border-gray-200">
+                  <span className="text-gray-600">Account Number</span>
+                  <span className="font-semibold text-gray-900 font-mono">12345678901</span>
+                </div>
+                <div className="flex justify-between py-2">
+                  <span className="text-gray-600">Amount</span>
+                  <span className="font-bold text-emerald-600">{plan?.price?.toLocaleString()} XAF</span>
+                </div>
               </div>
-            </div>
+            </motion.div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Transaction Reference</label>
@@ -292,47 +505,81 @@ const PaymentStep = ({ onSubmit, plan, loading }) => {
                 type="text"
                 value={paymentDetails.bankReference}
                 onChange={(e) => setPaymentDetails({ ...paymentDetails, bankReference: e.target.value })}
-                className={`w-full px-4 py-2.5 bg-white border rounded-xl focus:outline-none focus:ring-2 ${errors.bankReference ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-emerald-500'
+                className={`w-full px-4 py-3 bg-white/80 backdrop-blur-sm border-2 rounded-xl focus:outline-none transition-all duration-300 ${errors.bankReference ? 'border-red-300 focus:border-red-400' : 'border-gray-200 focus:border-emerald-400'
                   }`}
                 placeholder="Enter bank reference number"
               />
-              {errors.bankReference && <p className="mt-1 text-xs text-red-600">{errors.bankReference}</p>}
+              {errors.bankReference && (
+                <motion.p
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-1 text-xs text-red-500"
+                >
+                  {errors.bankReference}
+                </motion.p>
+              )}
             </div>
+
+            <motion.div
+              className="p-4 bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl border border-amber-200"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+            >
+              <p className="text-sm text-amber-700 flex items-center">
+                <span className="mr-2">⏰</span>
+                Bank transfers may take 1-3 business days to process. Your account will be activated once payment is confirmed.
+              </p>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Action buttons */}
-      <div className="flex justify-between pt-4 border-t border-gray-200">
+      {/* Secure Payment Badge */}
+      <div className="flex items-center justify-center space-x-2 text-xs text-gray-500">
+        <span>🔒</span>
+        <span>Secured by 256-bit SSL Encryption</span>
+      </div>
+
+      {/* Navigation Buttons */}
+      <div className="flex justify-between pt-6 border-t border-gray-200">
         <motion.button
-          whileHover={{ scale: 1.02 }}
+          whileHover={{ scale: 1.02, x: -2 }}
           whileTap={{ scale: 0.98 }}
           type="button"
           onClick={() => window.history.back()}
-          className="px-5 py-2.5 text-gray-700 font-medium rounded-xl hover:bg-gray-100 transition-colors flex items-center"
+          className="px-6 py-3 text-gray-600 font-medium rounded-xl hover:bg-gray-100 transition-all flex items-center group"
         >
-          <i className="pi pi-arrow-left mr-2"></i>
+          <svg className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
           Back
         </motion.button>
 
         <motion.button
-          whileHover={{ scale: 1.02 }}
+          whileHover={{ scale: 1.02, y: -2 }}
           whileTap={{ scale: 0.98 }}
           type="submit"
           disabled={loading || processing}
-          className="px-6 py-2.5 bg-gradient-to-r from-emerald-500 to-green-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+          className="relative px-8 py-3 bg-gradient-to-r from-emerald-500 via-green-500 to-emerald-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all disabled:opacity-50 overflow-hidden group"
         >
-          {processing ? (
-            <>
-              <i className="pi pi-spinner pi-spin mr-2"></i>
-              Processing...
-            </>
-          ) : (
-            <>
-              <i className="pi pi-lock mr-2"></i>
-              Complete Payment
-            </>
-          )}
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+          <span className="relative z-10 flex items-center">
+            {processing ? (
+              <>
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                  className="w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2"
+                />
+                Processing Payment...
+              </>
+            ) : (
+              <>
+                <span className="mr-2">🔒</span>
+                Complete Payment
+              </>
+            )}
+          </span>
         </motion.button>
       </div>
     </form>

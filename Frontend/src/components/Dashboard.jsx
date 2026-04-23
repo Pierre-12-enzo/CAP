@@ -394,7 +394,7 @@ const Dashboard = () => {
 
           {user?.role === 'super_admin' && (
             <Routes>
-              <Route path="/" element={<SuperAdminOverview />} />
+              <Route path="/dashboard" element={<SuperAdminOverview />} />
               <Route path="/plans" element={<PlansManager />} />
               <Route path="/subscriptions" element={<SubscriptionsReports />} />
               <Route path="/schools" element={<SchoolsManager />} />
@@ -405,7 +405,7 @@ const Dashboard = () => {
 
           {user?.role === 'staff' && (
             <Routes>
-              <Route path="/" element={<StaffOverview />} />
+              <Route path="/dashboard" element={<StaffOverview />} />
               <Route path="/card-studio" element={<StaffCardStudio />} />
               <Route path="/attendance" element={<StaffAttendance />} />
               <Route path="/students" element={<StaffStudents />} />
