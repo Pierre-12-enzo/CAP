@@ -163,6 +163,11 @@ const userSchema = new mongoose.Schema({
             default: false,
             required: function () { return this.role === 'staff'; }
         },
+        canManagePermissions: {
+            type: Boolean,
+            default: false,
+            required: function () { return this.role === 'staff'; }
+        },
         canViewAuditLogs: {
             type: Boolean,
             default: false,

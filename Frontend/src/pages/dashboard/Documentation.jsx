@@ -1,6 +1,6 @@
 // components/dashboard/Documentation.jsx
 import React, { useState } from 'react';
-import {  AnimatePresence } from 'framer-motion';
+import {  motion, AnimatePresence } from 'framer-motion';
 
 const Documentation = () => {
   const [activeSection, setActiveSection] = useState('overview');

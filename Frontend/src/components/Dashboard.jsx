@@ -13,6 +13,8 @@ import Profile from '../pages/dashboard/Profile';
 import Documentation from '../pages/dashboard/Documentation';
 import StaffManagement from '../pages/dashboard/StaffManagement';
 import SubscriptionManagement from '../pages/dashboard/SubscriptionManagement';
+import AuditLogs from '../pages/dashboard/AuditLogs';
+
 
 // Super Admin Pages
 import SuperAdminOverview from '../pages/superadmin/Overview';
@@ -141,8 +143,17 @@ const Dashboard = () => {
       if (permissions.canManageStudents) {
         items.push({ icon: 'pi-users', label: 'Students', path: '/staff/students', permission: true });
       }
+      if (permissions.canManageTemplates) {
+        items.push({ icon: 'pi-image', label: 'Card-Templates', path: '/staff/templates', permission: true });
+      }
+      if ( permissions.canManagePermissions) {
+        items.push ({ icon: 'pi-shield', label: 'Permission Studio', path: '/staff/permissions', permission: true })
+      }
       if (permissions.canMarkAttendance) {
         items.push({ icon: 'pi-calendar', label: 'Attendance', path: '/staff/attendance', permission: true });
+      }
+      if (permissions.canViewAuditLogs) {
+        items.push({ icon: 'pi-calendar', label: 'Audit Logs', path: '/staff/audit-logs', permission: true });
       }
 
       items.push({ icon: 'pi-cog', label: 'Settings', path: '/staff/settings', permission: true });
@@ -158,7 +169,8 @@ const Dashboard = () => {
         { icon: 'pi-users', label: 'Students', path: '/dashboard/students' },
         { icon: 'pi-user-plus', label: 'Staff', path: '/dashboard/staff' },
         { icon: 'pi-credit-card', label: 'Subscription', path: '/dashboard/subscription' },
-        { icon: 'pi-image', label: 'Templates', path: '/dashboard/templates' },
+        { icon: 'pi-image', label: 'Card-Templates', path: '/dashboard/templates' },
+        { icon: 'pi-calendar', label: 'Audit Logs', path: '/dashboard/audit-logs' },
         { icon: 'pi-cog', label: 'Settings', path: '/dashboard/settings' },
         { icon: 'pi-book', label: 'Documentation', path: '/dashboard/documentation' }
       ];
@@ -190,6 +202,7 @@ const Dashboard = () => {
       '/dashboard/staff': 'Manage staff members and permissions',
       '/dashboard/subscription': 'Manage your plan and billing',
       '/dashboard/templates': 'Create and manage templates',
+      '/dashboard/audit-logs': 'View system activity and changes',
       '/dashboard/settings': 'System configuration and profile settings',
       '/dashboard/documentation': 'User guides and API references',
       '/super_admin/dashboard': 'Platform overview',
@@ -201,7 +214,11 @@ const Dashboard = () => {
       '/staff/attendance': 'Mark attendance',
       '/staff/students': 'Manage students',
       '/staff/card-studio': 'Generate ID cards',
-      '/staff/settings': 'Profile settings'
+      '/staff/settings': 'Profile settings',
+      '/staff/templates': 'Manage card templates',
+      '/staff/permissions': 'Manage permissions',
+      '/staff/audit-logs': 'View system activity and changes'
+
     };
     return subtitles[location.pathname] || 'Manage your operations';
   };
@@ -387,6 +404,7 @@ const Dashboard = () => {
               <Route path="/staff" element={<StaffManagement />} />
               <Route path="/subscription" element={<SubscriptionManagement />} />
               <Route path="/templates" element={<TemplateManager />} />
+              <Route path="/audit-logs" element={<AuditLogs />} />
               <Route path="/settings" element={<Profile />} />
               <Route path="/documentation" element={<Documentation />} />
             </Routes>
@@ -409,7 +427,9 @@ const Dashboard = () => {
               <Route path="/card-studio" element={<StaffCardStudio />} />
               <Route path="/attendance" element={<StaffAttendance />} />
               <Route path="/students" element={<StaffStudents />} />
-              <Route path="/permissions" element={<StaffPermissions />} />
+              <Route path="/permissions" element={ <PermissionStudio/> } />
+              <Route path="/audit-logs" element={<AuditLogs />} />
+              <Route path="/templates" element={<TemplateManager />} />
               <Route path="/settings" element={<StaffProfile />} />
               <Route path="/documentation" element={<Documentation />} />
             </Routes>
