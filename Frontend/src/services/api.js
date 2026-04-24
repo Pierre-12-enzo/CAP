@@ -1288,6 +1288,70 @@ export const exportAPI = {
   }
 };
 
+// Audit API for Both Users
+export const auditAPI = {
+  // Get audit logs with filters
+  getAuditLogs: async (params = {}) => {
+    try {
+      const queryString = new URLSearchParams(params).toString();
+      const response = await api.get(`/audit/logs${queryString ? `?${queryString}` : ''}`);
+      return response.data;
+    } catch (error) {
+      console.error('Get audit logs error:', error.response?.data || error.message);
+      return { success: false, error: error.response?.data?.error || 'Failed to fetch audit logs' };
+    }
+  },
+
+  // Get audit trail for specific entity
+  getAuditTrail: async (model, id, params = {}) => {
+    try {
+      const queryString = new URLSearchParams(params).toString();
+      const response = await api.get(`/audit/trail/${model}/${id}${queryString ? `?${queryString}` : ''}`);
+      return response.data;
+    } catch (error) {
+      console.error('Get audit trail error:', error.response?.data || error.message);
+      return { success: false, error: error.response?.data?.error || 'Failed to fetch audit trail' };
+    }
+  },
+
+  // Get user activity
+  getUserActivity: async (userId, params = {}) => {
+    try {
+      const queryString = new URLSearchParams(params).toString();
+      const response = await api.get(`/audit/user/${userId}${queryString ? `?${queryString}` : ''}`);
+      return response.data;
+    } catch (error) {
+      console.error('Get user activity error:', error.response?.data || error.message);
+      return { success: false, error: error.response?.data?.error || 'Failed to fetch user activity' };
+    }
+  },
+
+  // Get school activity summary
+  getSchoolActivity: async (schoolId, params = {}) => {
+    try {
+      const queryString = new URLSearchParams(params).toString();
+      const response = await api.get(`/audit/school/${schoolId}/summary${queryString ? `?${queryString}` : ''}`);
+      return response.data;
+    } catch (error) {
+      console.error('Get school activity error:', error.response?.data || error.message);
+      return { success: false, error: error.response?.data?.error || 'Failed to fetch school activity' };
+    }
+  },
+
+  // Export audit logs (Excel/CSV)
+  exportAuditLogs: async (format = 'excel', params = {}) => {
+    try {
+      const response = await api.post('/audit/export', { format, ...params }, {
+        responseType: 'blob'
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Export audit logs error:', error.response?.data || error.message);
+      return { success: false, error: error.response?.data?.error || 'Failed to export audit logs' };
+    }
+  }
+};
+
 
 //===========================ADMNIN API CALLS===========================
 //===========================SUPER ADMIN API CALLS===========================

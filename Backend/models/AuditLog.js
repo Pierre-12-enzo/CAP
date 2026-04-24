@@ -138,7 +138,7 @@ const auditLogSchema = new mongoose.Schema({
     timestamps: true,
     // Create a capped collection to prevent unlimited growth
     // This is optional - remove if you want unlimited history
-    // capped: { size: 1024 * 1024 * 100, max: 10000 } // 100MB, 10000 documents
+    //capped: { size: 1024 * 1024 * 100, max: 10000 } // 100MB, 10000 documents
 });
 
 // ===== INDEXES =====
@@ -148,6 +148,7 @@ auditLogSchema.index({ schoolId: 1, createdAt: -1 }); // School's history
 auditLogSchema.index({ action: 1, createdAt: -1 }); // Action type history
 auditLogSchema.index({ targetId: 1, targetModel: 1 }); // Find logs for specific entity
 auditLogSchema.index({ importance: 1, createdAt: -1 }); // Critical events first
+auditLogSchema.index({ createdAt: 1 }, { expireAfterSeconds: 60 * 24 * 60 * 60 }); // 60 days
 
 // ===== COMPOUND INDEXES =====
 auditLogSchema.index({ schoolId: 1, action: 1, createdAt: -1 }); // School + action
@@ -191,6 +192,61 @@ auditLogSchema.pre('save', async function(next) {
     }
     
     next();
+});
+// models/AuditLog.js - ADD POST-SAVE HOOK
+auditLogSchema.post('save', async function(doc) {
+  try {
+    // Populate required fields for real-time emission
+    const populatedDoc = await doc.populate('userId', 'firstName lastName email role');
+    
+    const logData = {
+      _id: doc._id,
+      action: doc.action,
+      status: doc.status,
+      importance: doc.importance,
+      userId: doc.userId,
+      userInfo: {
+        name: populatedDoc.userId ? 
+          `${populatedDoc.userId.firstName} ${populatedDoc.userId.lastName}` : 'Unknown',
+        email: populatedDoc.userId?.email,
+        role: populatedDoc.userId?.role
+      },
+      schoolId: doc.schoolId,
+      schoolInfo: doc.schoolInfo,
+      targetModel: doc.targetModel,
+      targetId: doc.targetId,
+      details: doc.details,
+      ipAddress: doc.ipAddress,
+      createdAt: doc.createdAt
+    };
+    
+    // Emit to socket.io if available
+    const io = require('../server').io;
+    if (io) {
+      // Emit to specific rooms based on hierarchy
+      if (doc.userId) {
+        io.to(`user_${doc.userId}`).emit('audit:new', logData);
+      }
+      
+      if (doc.schoolId) {
+        io.to(`school_${doc.schoolId}`).emit('audit:new', logData);
+      }
+      
+      // Critical events to super admins
+      if (doc.importance === 'critical') {
+        io.to('role_super_admin').emit('audit:critical', logData);
+      }
+      
+      // Broadcast to all connected clients with appropriate permissions
+      io.emit('audit:global', { 
+        action: doc.action, 
+        importance: doc.importance,
+        schoolId: doc.schoolId
+      });
+    }
+  } catch (error) {
+    console.error('Failed to emit real-time audit log:', error);
+  }
 });
 
 // ===== STATIC METHODS =====

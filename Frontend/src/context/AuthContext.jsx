@@ -1,5 +1,6 @@
 // context/AuthContext.js (UPDATED)
 import React, { createContext, useState, useContext, useEffect } from 'react';
+import { initializeSocket, disconnectSocket } from '../services/socket';
 import { authAPI } from '../services/api';
 
 const AuthContext = createContext();
@@ -122,6 +123,8 @@ export const AuthProvider = ({ children }) => {
           console.log('✅ User set in context:', data.user); // Debug log
         }
 
+        //Initialize socket connection with the new token
+         initializeSocket(data.token); // ✅ Initialize socket with token after login
         // ✅ Return the redirectTo and user data to the component
         return {
           success: true,
@@ -184,6 +187,7 @@ export const AuthProvider = ({ children }) => {
     } finally {
       setUser(null);
       storage.removeItem('capmis_token');
+      disconnectSocket(); // ✅ Disconnect socket on logout
     }
   };
 
